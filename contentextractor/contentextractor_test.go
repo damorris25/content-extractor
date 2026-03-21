@@ -55,6 +55,24 @@ func TestIntegration_DOCX(t *testing.T) {
 	}
 }
 
+func TestIntegration_XLSX(t *testing.T) {
+	data, err := os.ReadFile("../testdata/simple.xlsx")
+	if err != nil {
+		t.Fatalf("failed to read test file: %v", err)
+	}
+
+	result, err := Extract(context.Background(), bytes.NewReader(data), "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(result.Text, "Name") || !strings.Contains(result.Text, "Alice") {
+		t.Errorf("Text = %q, want to contain Name and Alice", result.Text)
+	}
+	if result.Metadata.Get(metadata.KeyTitle) != "Sales Data" {
+		t.Errorf("Title = %q, want %q", result.Metadata.Get(metadata.KeyTitle), "Sales Data")
+	}
+}
+
 func TestIntegration_SupportedTypes(t *testing.T) {
 	reg := NewRegistry()
 	types := reg.SupportedTypes()

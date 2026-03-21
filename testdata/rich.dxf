@@ -1,0 +1,108 @@
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1032
+  9
+$INSUNITS
+ 70
+6
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LAYER
+  0
+LAYER
+  2
+Foundation
+ 70
+0
+  0
+LAYER
+  2
+Structural
+ 70
+0
+  0
+LAYER
+  2
+Electrical
+ 70
+0
+  0
+LAYER
+  2
+Plumbing
+ 70
+0
+  0
+LAYER
+  2
+HVAC
+ 70
+0
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+TEXT
+  1
+Building A - Ground Floor Plan
+  0
+TEXT
+  1
+Scale: 1:100
+  0
+TEXT
+  1
+North Elevation
+  0
+MTEXT
+  1
+Load-bearing wall\PThickness: 300mm\PMaterial: Reinforced concrete
+  0
+TEXT
+  1
+Fire Exit - Do Not Block
+  0
+TEXT
+  1
+Electrical Panel EP-01
+  0
+DIMENSION
+  1
+15.750m
+  0
+DIMENSION
+  1
+8.200m
+  0
+INSERT
+  2
+WindowType-A
+  0
+INSERT
+  2
+DoorType-B
+  0
+TEXT
+  1
+Stairwell Access
+  0
+ENDSEC
+  0
+EOF

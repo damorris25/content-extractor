@@ -34,6 +34,8 @@ func NewRegistry() *extractor.Registry {
 
 // Extract is a convenience function that detects format and extracts content.
 // If mime is empty, format auto-detection is used.
+// Note: this creates a new registry on each call. For repeated use, call
+// NewRegistry() once and reuse it.
 func Extract(ctx context.Context, r io.ReadSeeker, mime string) (*extractor.Result, error) {
 	return NewRegistry().Extract(ctx, r, mime)
 }

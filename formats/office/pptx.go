@@ -106,6 +106,9 @@ func extractSlideText(ctx context.Context, zr *zip.Reader) (string, error) {
 	for _, f := range zr.File {
 		if strings.HasPrefix(f.Name, "ppt/slides/slide") && strings.HasSuffix(f.Name, ".xml") {
 			slideFiles = append(slideFiles, f)
+			if len(slideFiles) >= maxZIPEntries {
+				break
+			}
 		}
 	}
 	sort.Slice(slideFiles, func(i, j int) bool {
@@ -139,9 +142,10 @@ func extractSingleSlide(ctx context.Context, f *zip.File) (string, error) {
 	}
 	defer rc.Close()
 
+	lr := io.LimitReader(rc, maxDecompressedEntrySize)
 	const drawingMLNS = "http://schemas.openxmlformats.org/drawingml/2006/main"
 
-	decoder := xml.NewDecoder(rc)
+	decoder := xml.NewDecoder(lr)
 	var result strings.Builder
 	inParagraph := false
 	inText := false

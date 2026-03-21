@@ -3,6 +3,7 @@ package cad
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -69,7 +70,7 @@ func (e *Extractor) Extract(ctx context.Context, r io.Reader, mime string) (*ext
 	}
 	result.Metadata.Set(metadata.KeyFormat, mime)
 
-	parseDXF(string(data), result)
+	parseDXF(data, result)
 
 	return result, nil
 }
@@ -81,11 +82,14 @@ func (e *Extractor) SupportedMIMETypes() []string {
 
 // parseDXF parses a DXF file extracting text content and metadata.
 // DXF files consist of group code/value pairs organized into sections.
-func parseDXF(content string, result *extractor.Result) {
-	scanner := bufio.NewScanner(strings.NewReader(content))
+func parseDXF(data []byte, result *extractor.Result) {
+	scanner := bufio.NewScanner(bytes.NewReader(data))
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024) // Allow up to 1MB lines
 	var texts []string
 	var layers []string
 	layerSeen := make(map[string]bool)
+	const maxTexts = 100000 // Cap text entities to prevent memory exhaustion.
+	const maxLayers = 10000
 
 	// Track current parsing state.
 	var section string
@@ -127,7 +131,7 @@ func parseDXF(content string, result *extractor.Result) {
 				entityType = value
 			}
 			// Collect layer names from the TABLES section.
-			if entityType == "LAYER" && code == "2" && value != "" {
+			if entityType == "LAYER" && code == "2" && value != "" && len(layers) < maxLayers {
 				if !layerSeen[value] {
 					layerSeen[value] = true
 					layers = append(layers, value)
@@ -136,6 +140,9 @@ func parseDXF(content string, result *extractor.Result) {
 		case "ENTITIES":
 			if code == "0" {
 				entityType = value
+			}
+			if len(texts) >= maxTexts {
+				continue
 			}
 			switch entityType {
 			case "TEXT", "ATTRIB", "ATTDEF":
@@ -157,6 +164,9 @@ func parseDXF(content string, result *extractor.Result) {
 			}
 		}
 	}
+
+	// scanner.Err() is intentionally not checked — a scan error on malformed
+	// input should not prevent returning whatever text was already collected.
 
 	if len(layers) > 0 {
 		result.Metadata.Set("cad:layers", strings.Join(layers, ", "))

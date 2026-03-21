@@ -13,6 +13,21 @@ import (
 
 const maxDetectBytes = 8192 // 8KB is sufficient for all known signatures
 
+// validODFMIME is a whitelist of known ODF MIME types that can be trusted
+// from a ZIP file's "mimetype" entry. Prevents type confusion attacks where
+// an attacker sets the mimetype entry to route their file to an arbitrary extractor.
+var validODFMIME = map[string]bool{
+	"application/vnd.oasis.opendocument.text":                  true,
+	"application/vnd.oasis.opendocument.spreadsheet":           true,
+	"application/vnd.oasis.opendocument.presentation":          true,
+	"application/vnd.oasis.opendocument.graphics":              true,
+	"application/vnd.oasis.opendocument.chart":                 true,
+	"application/vnd.oasis.opendocument.formula":               true,
+	"application/vnd.oasis.opendocument.text-template":         true,
+	"application/vnd.oasis.opendocument.spreadsheet-template":  true,
+	"application/vnd.oasis.opendocument.presentation-template": true,
+}
+
 // Detector identifies file formats from content and/or filename.
 type Detector struct{}
 
@@ -114,7 +129,7 @@ func detectZIPFormat(r io.ReadSeeker, originalPos int64) string {
 	}
 
 	// Read enough for ZIP inspection.
-	data, err := io.ReadAll(io.LimitReader(r, 10*1024*1024)) // 10MB limit
+	data, err := io.ReadAll(io.LimitReader(r, 2*1024*1024)) // 2MB limit for ZIP detection
 	if err != nil {
 		return ""
 	}
@@ -129,16 +144,22 @@ func detectZIPFormat(r io.ReadSeeker, originalPos int64) string {
 		return ""
 	}
 
+	// Limit file set size to prevent resource exhaustion from ZIP bombs
+	// with millions of entries.
+	const maxEntries = 10000
+	if len(zr.File) > maxEntries {
+		return "application/zip" // Too many entries to inspect safely.
+	}
 	fileSet := make(map[string]bool, len(zr.File))
 	for _, f := range zr.File {
 		fileSet[f.Name] = true
 	}
 
 	// Check for ODF formats first (they have a mimetype file).
+	// Validate against known ODF MIME types to prevent type confusion.
 	if fileSet["mimetype"] {
-		mime := readZIPEntry(zr, "mimetype")
-		mime = strings.TrimSpace(mime)
-		if mime != "" {
+		mime := strings.TrimSpace(readZIPEntry(zr, "mimetype"))
+		if validODFMIME[mime] {
 			return mime
 		}
 	}

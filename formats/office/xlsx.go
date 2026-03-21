@@ -119,8 +119,10 @@ func loadSharedStrings(ctx context.Context, zr *zip.Reader) ([]string, error) {
 	}
 	defer rc.Close()
 
+	lr := io.LimitReader(rc, maxDecompressedEntrySize)
+
 	var strings []string
-	decoder := xml.NewDecoder(rc)
+	decoder := xml.NewDecoder(lr)
 	var current stringBuilder
 	inSI := false
 	inT := false
@@ -181,10 +183,14 @@ func (s *stringBuilder) String() string   { return s.b.String() }
 // extractSheetText reads all worksheets and extracts cell text.
 func extractSheetText(ctx context.Context, zr *zip.Reader, sharedStrings []string) (string, error) {
 	// Find all sheet files, sorted by name for deterministic order.
+	// Limit entry count to prevent resource exhaustion.
 	var sheetFiles []*zip.File
 	for _, f := range zr.File {
 		if strings.HasPrefix(f.Name, "xl/worksheets/sheet") && strings.HasSuffix(f.Name, ".xml") {
 			sheetFiles = append(sheetFiles, f)
+			if len(sheetFiles) >= maxZIPEntries {
+				break
+			}
 		}
 	}
 	sort.Slice(sheetFiles, func(i, j int) bool {
@@ -217,7 +223,8 @@ func extractSingleSheet(ctx context.Context, f *zip.File, sharedStrings []string
 	}
 	defer rc.Close()
 
-	decoder := xml.NewDecoder(rc)
+	lr := io.LimitReader(rc, maxDecompressedEntrySize)
+	decoder := xml.NewDecoder(lr)
 	var result strings.Builder
 	var cellValue strings.Builder
 	var cellType string

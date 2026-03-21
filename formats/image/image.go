@@ -205,12 +205,13 @@ func extractPNGText(data []byte, result *extractor.Result) {
 
 	for pos+12 <= len(data) {
 		// Chunk: 4 bytes length, 4 bytes type, data, 4 bytes CRC.
-		chunkLen := int(data[pos])<<24 | int(data[pos+1])<<16 | int(data[pos+2])<<8 | int(data[pos+3])
+		cl := uint32(data[pos])<<24 | uint32(data[pos+1])<<16 | uint32(data[pos+2])<<8 | uint32(data[pos+3])
 		chunkType := string(data[pos+4 : pos+8])
 
-		if chunkLen < 0 || pos+12+chunkLen > len(data) {
+		if cl > uint32(len(data)-pos-12) {
 			break
 		}
+		chunkLen := int(cl)
 
 		chunkData := data[pos+8 : pos+8+chunkLen]
 

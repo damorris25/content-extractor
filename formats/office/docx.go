@@ -103,6 +103,7 @@ func (e *DocxExtractor) SupportedMIMETypes() []string {
 }
 
 // extractDocumentText parses word/document.xml and extracts text from <w:t> elements.
+// NOTE: Go's encoding/xml does not process external entities (XXE-safe by default).
 func extractDocumentText(ctx context.Context, zr *zip.Reader) (string, error) {
 	f := findZipFile(zr, "word/document.xml")
 	if f == nil {
@@ -115,8 +116,11 @@ func extractDocumentText(ctx context.Context, zr *zip.Reader) (string, error) {
 	}
 	defer rc.Close()
 
+	// Limit decompressed size to prevent zip bombs.
+	lr := io.LimitReader(rc, maxDecompressedEntrySize)
+
 	var b strings.Builder
-	decoder := xml.NewDecoder(rc)
+	decoder := xml.NewDecoder(lr)
 	inParagraph := false
 	paragraphCount := 0
 

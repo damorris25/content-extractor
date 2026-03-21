@@ -70,13 +70,30 @@ func (e *Extractor) Extract(ctx context.Context, r io.Reader, mime string) (*ext
 		return nil, err
 	}
 
-	reader := bytes.NewReader(data)
-	pdfReader, err := lpdf.NewReader(reader, int64(len(data)))
+	result, err := e.extractPDF(ctx, data)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", extractor.ErrCorruptInput, err)
+		return nil, err
+	}
+	return result, nil
+}
+
+// extractPDF performs the actual PDF parsing with panic recovery.
+// The ledongthuc/pdf library may panic on malformed input.
+func (e *Extractor) extractPDF(ctx context.Context, data []byte) (result *extractor.Result, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			result = nil
+			err = fmt.Errorf("%w: PDF parser panic: %v", extractor.ErrCorruptInput, r)
+		}
+	}()
+
+	reader := bytes.NewReader(data)
+	pdfReader, pdfErr := lpdf.NewReader(reader, int64(len(data)))
+	if pdfErr != nil {
+		return nil, fmt.Errorf("%w: %v", extractor.ErrCorruptInput, pdfErr)
 	}
 
-	result := &extractor.Result{
+	result = &extractor.Result{
 		ContentType: mimePDF,
 		Metadata:    make(metadata.Metadata),
 	}
@@ -91,9 +108,9 @@ func (e *Extractor) Extract(ctx context.Context, r io.Reader, mime string) (*ext
 	}
 
 	for i := 1; i <= numPages; i++ {
-		if err := ctx.Err(); err != nil {
+		if ctxErr := ctx.Err(); ctxErr != nil {
 			result.Text = metadata.CleanUTF8(b.String())
-			return result, err
+			return result, ctxErr
 		}
 
 		page := pdfReader.Page(i)
@@ -101,8 +118,8 @@ func (e *Extractor) Extract(ctx context.Context, r io.Reader, mime string) (*ext
 			continue
 		}
 
-		text, err := page.GetPlainText(nil)
-		if err != nil {
+		text, textErr := page.GetPlainText(nil)
+		if textErr != nil {
 			continue // Skip pages that fail to parse.
 		}
 

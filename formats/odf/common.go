@@ -17,6 +17,10 @@ const (
 	// DefaultMaxODFSize is the maximum uncompressed size for an ODF file.
 	DefaultMaxODFSize = 100 * 1024 * 1024 // 100MB
 
+	// maxDecompressedEntrySize limits the decompressed size of individual ZIP entries
+	// to prevent zip bomb attacks.
+	maxDecompressedEntrySize = 100 * 1024 * 1024 // 100MB
+
 	textNS  = "urn:oasis:names:tc:opendocument:xmlns:text:1.0"
 	tableNS = "urn:oasis:names:tc:opendocument:xmlns:table:1.0"
 	drawNS  = "urn:oasis:names:tc:opendocument:xmlns:drawing:1.0"

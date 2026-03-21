@@ -58,27 +58,37 @@ func parseFLAC(data []byte, result *extractor.Result) {
 // Format: vendor_length(4 LE) + vendor_string + comment_count(4 LE) + comments
 // Each comment: length(4 LE) + "KEY=VALUE"
 func parseVorbisComment(data []byte, result *extractor.Result) {
-	if len(data) < 4 {
+	if len(data) < 8 {
 		return
 	}
 
-	// Skip vendor string.
-	vendorLen := int(readUint32LE(data, 0))
-	pos := 4 + vendorLen
+	// Skip vendor string — validate uint32 before casting to int.
+	vendorLen := readUint32LE(data, 0)
+	if vendorLen > uint32(len(data)-4) {
+		return
+	}
+	pos := 4 + int(vendorLen)
 	if pos+4 > len(data) {
 		return
 	}
 
-	commentCount := int(readUint32LE(data, pos))
+	commentCount := readUint32LE(data, pos)
 	pos += 4
 
-	for i := 0; i < commentCount && pos+4 <= len(data); i++ {
-		commentLen := int(readUint32LE(data, pos))
+	// Cap comment count to prevent excessive iteration.
+	const maxComments = 65536
+	if commentCount > maxComments {
+		commentCount = maxComments
+	}
+
+	for i := uint32(0); i < commentCount && pos+4 <= len(data); i++ {
+		cl := readUint32LE(data, pos)
 		pos += 4
 
-		if pos+commentLen > len(data) {
+		if cl > uint32(len(data)-pos) {
 			break
 		}
+		commentLen := int(cl)
 
 		comment := string(data[pos : pos+commentLen])
 		pos += commentLen
@@ -103,12 +113,13 @@ func parseWAV(data []byte, result *extractor.Result) {
 	pos := 12
 	for pos+8 <= len(data) {
 		chunkID := string(data[pos : pos+4])
-		chunkSize := int(readUint32LE(data, pos+4))
+		cs := readUint32LE(data, pos+4)
 		pos += 8
 
-		if pos+chunkSize > len(data) {
+		if cs > uint32(len(data)-pos) {
 			break
 		}
+		chunkSize := int(cs)
 
 		switch chunkID {
 		case "fmt ":
@@ -138,12 +149,13 @@ func parseRIFFInfo(data []byte, result *extractor.Result) {
 	pos := 0
 	for pos+8 <= len(data) {
 		tag := string(data[pos : pos+4])
-		size := int(readUint32LE(data, pos+4))
+		s := readUint32LE(data, pos+4)
 		pos += 8
 
-		if pos+size > len(data) {
+		if s > uint32(len(data)-pos) {
 			break
 		}
+		size := int(s)
 
 		value := cleanString(string(data[pos : pos+size]))
 		switch tag {

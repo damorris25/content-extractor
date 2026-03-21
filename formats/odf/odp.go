@@ -78,7 +78,7 @@ func (e *ODPExtractor) Extract(ctx context.Context, r io.Reader, mime string) (*
 	}
 	defer rc.Close()
 
-	text, err := extractODPText(ctx, rc)
+	text, err := extractODPText(ctx, io.LimitReader(rc, maxDecompressedEntrySize))
 	if err != nil {
 		result.Text = metadata.CleanUTF8(text)
 		extractODFMeta(zr, result)

@@ -15,7 +15,8 @@ type Detector interface {
 }
 
 // Registry maps MIME types to Extractor implementations.
-// Thread-safe for concurrent reads after initialization.
+// Safe for concurrent reads (Lookup, Extract, SupportedTypes) after initialization.
+// Register and SetDetector must only be called during initialization (not concurrently).
 type Registry struct {
 	extractors map[string]Extractor
 	detector   Detector

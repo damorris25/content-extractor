@@ -51,15 +51,16 @@ func parseID3v2Frames(data []byte, pos, end int, version byte, result *extractor
 
 		pos += 10 // Skip header.
 
-		if frameSize == 0 || pos+int(frameSize) > end {
+		if frameSize == 0 || frameSize > uint32(end-pos) {
 			break
 		}
 
-		frameData := data[pos : pos+int(frameSize)]
+		fs := int(frameSize)
+		frameData := data[pos : pos+fs]
 		value := decodeTextFrame(frameData)
 		setAudioMeta(result.Metadata, frameID, value)
 
-		pos += int(frameSize)
+		pos += fs
 	}
 }
 

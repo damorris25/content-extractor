@@ -1,6 +1,8 @@
 // CONTRACT:I1-METADATA.1.0
 package metadata
 
+import "strings"
+
 // Metadata provides typed access to extracted metadata key-value pairs.
 // Keys follow a namespaced convention: "namespace:field" (e.g., "dc:title").
 // All values are string slices to support multi-valued fields.
@@ -56,8 +58,9 @@ func (m Metadata) GetAll(key string) []string {
 }
 
 // Set sets the key to a single value, replacing any existing values.
-// Empty values are omitted per contract.
+// Empty values are omitted per contract. NUL bytes are stripped.
 func (m Metadata) Set(key, value string) {
+	value = stripNUL(value)
 	if value == "" {
 		delete(m, key)
 		return
@@ -66,12 +69,22 @@ func (m Metadata) Set(key, value string) {
 }
 
 // Add appends a value to the key. Does not overwrite existing values.
-// Empty values are omitted per contract.
+// Empty values are omitted per contract. NUL bytes are stripped.
 func (m Metadata) Add(key, value string) {
+	value = stripNUL(value)
 	if value == "" {
 		return
 	}
 	m[key] = append(m[key], value)
+}
+
+// stripNUL removes NUL bytes from a string. NUL bytes in metadata values
+// are never legitimate and can cause issues with downstream consumers.
+func stripNUL(s string) string {
+	if strings.IndexByte(s, 0) < 0 {
+		return s
+	}
+	return strings.ReplaceAll(s, "\x00", "")
 }
 
 // Has returns true if the key exists and has at least one non-empty value.

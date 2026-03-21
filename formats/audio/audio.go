@@ -148,18 +148,30 @@ func setAudioMeta(m metadata.Metadata, key, value string) {
 }
 
 // readUint32BE reads a big-endian uint32 from data at offset.
+// Returns 0 if offset is out of bounds.
 func readUint32BE(data []byte, offset int) uint32 {
+	if offset < 0 || offset+4 > len(data) {
+		return 0
+	}
 	return uint32(data[offset])<<24 | uint32(data[offset+1])<<16 |
 		uint32(data[offset+2])<<8 | uint32(data[offset+3])
 }
 
 // readUint32LE reads a little-endian uint32 from data at offset.
+// Returns 0 if offset is out of bounds.
 func readUint32LE(data []byte, offset int) uint32 {
+	if offset < 0 || offset+4 > len(data) {
+		return 0
+	}
 	return uint32(data[offset]) | uint32(data[offset+1])<<8 |
 		uint32(data[offset+2])<<16 | uint32(data[offset+3])<<24
 }
 
 // readUint16LE reads a little-endian uint16 from data at offset.
+// Returns 0 if offset is out of bounds.
 func readUint16LE(data []byte, offset int) uint16 {
+	if offset < 0 || offset+2 > len(data) {
+		return 0
+	}
 	return uint16(data[offset]) | uint16(data[offset+1])<<8
 }

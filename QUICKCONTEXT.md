@@ -7,21 +7,22 @@ Verify claims against `git log --oneline -10`, then proceed to TODO.md.
 
 ## Project
 
-Go library for extracting text content and metadata from unstructured file formats (Office, ODF, PDF, images, audio, CAD). Commercial-friendly, minimal dependencies, low memory footprint.
+Dual-language library (Go + TypeScript) for extracting text content and metadata from unstructured file formats (Office, ODF, PDF, images, audio, CAD). Commercial-friendly, minimal dependencies, low memory footprint. TypeScript port has proven output parity via golden file tests.
 
 ## Current Branch & State
 
 | Field | Value |
 |-------|-------|
 | **Branch** | `master` |
-| **Last significant commit** | TypeScript port with golden file parity |
-| **Build status** | Passing (`go build ./...`) |
-| **Test count** | Go: 139 tests / 12 packages; TS: 34 parity tests |
-| **Test status** | All passing (including `-race`) |
+| **Last significant commit** | README update with TypeScript implementation details |
+| **Remote** | `https://github.com/damorris25/content-extractor.git` (master + main) |
+| **Build status** | Go: Passing (`go build ./...`); TS: Passing (`npm run build`, 203ms) |
+| **Test count** | Go: 139 tests / 12 packages; TS: 34 golden file parity tests |
+| **Test status** | All passing (Go with `-race`; TS 20ms execution) |
 
 ## What's In Progress
 
-- **Current focus:** TypeScript port complete; all P0-P2 + TS done
+- **Current focus:** Both implementations complete; all P0-P2 + TS done
 - **Active branch(es):** `master`
 - **Assigned agents:** none
 
@@ -44,9 +45,19 @@ Go library for extracting text content and metadata from unstructured file forma
 
 _None currently._
 
+## Key Numbers
+
+| Metric | Go | TypeScript |
+|--------|-----|-----------|
+| Runtime deps | 2 (BSD) | 1 required (fflate, MIT) + 1 optional (pdfjs-dist) |
+| Test count | 139 | 34 golden parity |
+| Source lines | ~6,500 | ~4,200 |
+| Bundle size | N/A (compiled) | 60 KB ESM / 42 KB CJS |
+
 ## What's Next
 
-1. TypeScript/WASM bindings (future)
-2. Additional edge-case test coverage
+1. Additional edge-case test coverage
+2. TypeScript PDF parity (requires pdfjs-dist golden files)
+3. npm publish for TypeScript package
 
 ---

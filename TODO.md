@@ -40,6 +40,13 @@ code reference sections of this file.
 - [x] Quality test content for accuracy testing (rich fixtures + accuracy test suite)
 - [x] TypeScript library (browser-first, golden file parity with Go)
 
+## P3 — Future
+
+- [ ] TypeScript PDF parity (generate PDF-specific golden files with pdfjs-dist)
+- [ ] npm publish for `@content-extractor/core`
+- [ ] TypeScript browser-mode tests (Vitest browser environment)
+- [ ] Additional edge-case test coverage (both Go and TS)
+
 ## Known Issues & Blockers
 
 ### Active Blockers
@@ -48,11 +55,12 @@ _None currently._
 
 ### Gotchas
 
-_None currently._
+- TypeScript PDF extractor requires `pdfjs-dist` peer dep — not included in golden parity tests yet (Go uses `ledongthuc/pdf` which may produce slightly different text)
+- `@xmldom/xmldom` needed as dev dep for Node.js tests (browser DOMParser not available in Node)
 
 ### Workarounds In Place
 
-_None currently._
+- `stripInnerXMLDeclarations()` in `ts/src/formats/xml-utils.ts` — removes `<?xml...?>` PIs after document prolog because `@xmldom/xmldom` throws fatalError on them (Go's `encoding/xml` and browser DOMParser both ignore them)
 
 ## Discoveries
 
@@ -85,5 +93,7 @@ _None yet._
 - [x] 2026-03-21: Rich test fixtures + accuracy test suite (7 formats, Unicode, known expected values)
 - [x] 2026-03-21: Security hardening — decompression limits, uint32 overflow fixes, panic recovery, NUL stripping, type confusion prevention
 - [x] 2026-03-21: TypeScript port — browser-first, 34 golden file parity tests, 1 runtime dep (fflate)
+- [x] 2026-03-21: README updated with dual-language docs, parity metrics, TS usage examples
+- [x] 2026-03-21: GitHub repo created and pushed (damorris25/content-extractor, master + main)
 
 ---

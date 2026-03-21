@@ -35,9 +35,9 @@ code reference sections of this file.
 - [x] CAD text extraction (DXF text entities — TEXT, MTEXT, ATTRIB, DIMENSION, INSERT)
 - [~] ~~Legacy Office formats (DOC, XLS, PPT)~~ — **won't do** (low demand, OLE2 complexity not justified)
 - [~] ~~DWG support~~ — **won't do** (proprietary format, no pure-Go parser, DXF covers the use case)
-- [ ] Benchmark suite for memory usage and throughput
-- [ ] License audit tooling (automated check of dependency licenses)
-- [ ] Quality test content for accuracy testing (real-world-like fixtures)
+- [x] Benchmark suite for memory usage and throughput
+- [x] License audit tooling (automated check of dependency licenses)
+- [x] Quality test content for accuracy testing (rich fixtures + accuracy test suite)
 - [ ] TypeScript/WASM bindings (future language expansion)
 
 ## Known Issues & Blockers
@@ -80,5 +80,8 @@ _None yet._
 - [x] 2026-03-21: Image metadata extractor (JPEG EXIF, PNG tEXt, dimensions for all formats)
 - [x] 2026-03-21: Audio metadata extractor (MP3 ID3v2, OGG/FLAC Vorbis, WAV RIFF — pure Go)
 - [x] 2026-03-21: DXF text/metadata extractor (TEXT, MTEXT, layers, header vars)
+- [x] 2026-03-21: Benchmark suite (per-format throughput, text scaling, detection overhead)
+- [x] 2026-03-21: License audit tooling (scripts/check-licenses.sh, all deps pass)
+- [x] 2026-03-21: Rich test fixtures + accuracy test suite (7 formats, Unicode, known expected values)
 
 ---

@@ -1,0 +1,79 @@
+# TODO
+
+<!-- freshness: 2026-03-21 -->
+<!-- last-synced: 2026-03-21 — date this file was verified against code -->
+
+Consolidated task tracking for the project. All `TRACKED-TASK:` comments in
+code reference sections of this file.
+
+**Two-Tag System:** See AGENTS.md "TODO Tracking" for full rules. Short version:
+- `TODO:` in code = untracked = **blocks commit**
+- `TRACKED-TASK:` in code = tracked here = commit allowed
+
+---
+
+## P0 — Immediate (do next)
+
+- [x] Define core contracts: C1-EXTRACTOR, I1-METADATA, I2-REGISTRY, C2-DETECT
+- [x] Initialize Go module (`go.mod`) and base directory structure
+- [x] Implement core types (Extractor interface, Result, errors, metadata model, registry)
+- [x] Implement format detection (`detect/` package) — MIME type identification from magic bytes and file extension
+- [x] Implement plain text extractor — proof-of-concept for the extraction pipeline
+- [x] Implement DOCX extractor (OOXML ZIP-based, `word/document.xml` text extraction)
+
+## P1 — Soon (this sprint / this week)
+
+- [ ] Implement XLSX extractor (shared strings + sheet XML)
+- [ ] Implement PPTX extractor (slide XML text extraction)
+- [ ] Implement PDF text extractor (text-layer PDF, not OCR)
+- [ ] Implement ODT/ODS/ODP extractors (ZIP-based, `content.xml`)
+
+## P2 — Backlog (when time permits)
+
+- [ ] Image metadata extraction (EXIF from JPEG/TIFF, basic PNG metadata)
+- [ ] Audio metadata extraction (ID3v2 from MP3, Vorbis comments from OGG/FLAC)
+- [ ] CAD text extraction (DXF text entities — DXF is ASCII-parseable)
+- [ ] Legacy Office formats (DOC, XLS, PPT — OLE2 compound document)
+- [ ] DWG support (binary CAD — may require third-party library)
+- [ ] Benchmark suite for memory usage and throughput
+- [ ] License audit tooling (automated check of dependency licenses)
+- [ ] TypeScript/WASM bindings (future language expansion)
+
+## Known Issues & Blockers
+
+### Active Blockers
+
+_None currently._
+
+### Gotchas
+
+- **DWG format is proprietary** — No open-source pure-Go DWG parser exists.
+  May need to support DXF-only for CAD, or evaluate commercial-friendly C libraries with CGO.
+- **Legacy Office (DOC/XLS/PPT)** — OLE2 parsing is complex. Evaluate
+  existing Go libraries for license compatibility before implementing from scratch.
+
+### Workarounds In Place
+
+_None currently._
+
+## Discoveries
+
+_None yet._
+
+## Code Debt
+
+- [ ] WebP detection should check bytes 8-11 for "WEBP" (currently matches any RIFF)
+  <!-- TRACKED-TASK in detect/signatures.go:37 -->
+- [ ] WAV/WebP disambiguation needs bytes 8-11 check (RIFF + WAVE vs RIFF + WEBP)
+  <!-- TRACKED-TASK in detect/signatures.go:57 -->
+
+## Completed
+
+- [x] 2026-03-21: Core types (Extractor, Result, errors, metadata, registry)
+- [x] 2026-03-21: Format detection (magic bytes + extension fallback)
+- [x] 2026-03-21: Plain text extractor
+- [x] 2026-03-21: DOCX extractor with metadata extraction
+- [x] 2026-03-21: Integration wiring (contentextractor convenience package)
+- [x] 2026-03-21: Contract compliance test harness (extractortest package)
+
+---

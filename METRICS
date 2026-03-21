@@ -1,0 +1,12 @@
+# Project Metrics — Single source of truth for quantitative claims
+#
+# Verified by: scripts/check-ground-truth.sh
+# Updated by: agents, CI, developers (anyone who changes a counted thing)
+#
+# Format: key = value
+# Keys must match what compute_metrics() outputs in check-ground-truth.sh.
+
+test_files = 0
+contracts = 4
+format_extractors = 0
+go_packages = 0

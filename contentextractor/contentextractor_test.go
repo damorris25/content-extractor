@@ -91,6 +91,21 @@ func TestIntegration_PPTX(t *testing.T) {
 	}
 }
 
+func TestIntegration_PDF(t *testing.T) {
+	data, err := os.ReadFile("../testdata/simple.pdf")
+	if err != nil {
+		t.Fatalf("failed to read test file: %v", err)
+	}
+
+	result, err := Extract(context.Background(), bytes.NewReader(data), "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(result.Text, "Hello") {
+		t.Errorf("Text = %q, want to contain 'Hello'", result.Text)
+	}
+}
+
 func TestIntegration_SupportedTypes(t *testing.T) {
 	reg := NewRegistry()
 	types := reg.SupportedTypes()

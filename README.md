@@ -7,18 +7,74 @@ unstructured file formats. Inspired by [Apache Tika](https://tika.apache.org/),
 built for commercial use with minimal dependencies and a small memory footprint.
 
 **Supported format families:**
-- Microsoft Office (DOCX, XLSX, PPTX, DOC, XLS, PPT)
+- Microsoft Office (DOCX, XLSX, PPTX)
 - Open Document Format (ODT, ODS, ODP)
-- PDF
-- Images (JPEG, PNG, TIFF, BMP, WebP — EXIF/metadata extraction)
-- Audio (MP3, WAV, FLAC, OGG — ID3/metadata extraction)
-- CAD (DXF, DWG — text/metadata extraction)
+- PDF (text-layer extraction)
+- Images (JPEG, PNG, TIFF, BMP, GIF, WebP — EXIF/metadata extraction)
+- Audio (MP3, OGG, FLAC, WAV — ID3v2/Vorbis/RIFF metadata)
+- CAD (DXF — text entities, layers, and metadata)
 
 **Design constraints:**
-- Pure Go with minimal third-party dependencies
+- Pure Go with minimal third-party dependencies (2 total, both BSD-licensed)
 - No GPL-licensed dependencies (commercial-friendly: MIT, BSD, Apache 2.0 only)
 - Low memory footprint — suitable for IoT, containers, and desktop environments
 - Streaming-capable for large files
+
+## Performance
+
+Benchmarks run on Apple M5, Go 1.26.1. All times are per-operation on minimal test fixtures.
+
+### Extraction Throughput
+
+| Format | Throughput | Time/Op | Allocs/Op | Memory/Op |
+|--------|-----------|---------|-----------|-----------|
+| Plain Text (1KB) | 494 MB/s | 2.1 us | 7 | 34 KB |
+| DOCX | 83 MB/s | 25 us | 342 | 51 KB |
+| XLSX | 80 MB/s | 36 us | 516 | 68 KB |
+| PPTX | 92 MB/s | 28 us | 382 | 54 KB |
+| PDF | 54 MB/s | 11 us | 326 | 64 KB |
+| ODT | 46 MB/s | 18 us | 252 | 39 KB |
+| ODS | 34 MB/s | 28 us | 365 | 44 KB |
+| ODP | 41 MB/s | 23 us | 298 | 42 KB |
+| JPEG (metadata) | 216 MB/s | 3.3 us | 31 | 33 KB |
+| PNG (metadata) | 154 MB/s | 2.0 us | 46 | 16 KB |
+| MP3 (ID3v2) | 546 MB/s | 1.0 us | 48 | 3 KB |
+| OGG (Vorbis) | 244 MB/s | 0.9 us | 47 | 2 KB |
+| FLAC (Vorbis) | 205 MB/s | 0.9 us | 47 | 2 KB |
+| WAV (RIFF) | 455 MB/s | 0.5 us | 23 | 1 KB |
+| DXF (CAD) | 266 MB/s | 1.7 us | 53 | 6 KB |
+
+### Text Scaling (Plain Text)
+
+| Input Size | Throughput | Time/Op |
+|------------|-----------|---------|
+| 1 KB | 407 MB/s | 2.5 us |
+| 10 KB | 2.9 GB/s | 3.6 us |
+| 100 KB | 4.6 GB/s | 22 us |
+| 1 MB | 2.4 GB/s | 442 us |
+
+### Accuracy
+
+All extractors pass accuracy tests against rich test fixtures with known expected content.
+
+| Format | Text Extraction | Metadata | Unicode | Accuracy Tests |
+|--------|----------------|----------|---------|----------------|
+| DOCX | Full paragraphs, `&amp;` entities | Title, creator, subject, description, dates | CJK, Korean, French accents, symbols | Pass |
+| XLSX | Headers, cell values (shared strings + numeric) | Title, creator | — | Pass |
+| PPTX | All slides, bullet points, multi-shape | Title, creator | — | Pass |
+| ODT | Paragraphs, headings | Title, creator, subject, description | — | Pass |
+| ODS | Cell values, multi-table | Title, creator | — | Pass |
+| ODP | Slide text (excludes notes) | Title, creator | — | Pass |
+| PDF | Text-layer extraction | Format detection | — | Pass |
+| JPEG | — | EXIF (dimensions, camera, GPS) | — | Pass |
+| PNG | — | tEXt chunks (title, author, etc.) | — | Pass |
+| MP3 | Text summary | ID3v2 (title, artist, album, track, year, genre, album artist) | — | Pass |
+| OGG | Text summary | Vorbis comments (title, artist, album, track, date, genre) | — | Pass |
+| FLAC | Text summary | Vorbis comments (same as OGG) | — | Pass |
+| WAV | Text summary | RIFF INFO + fmt (channels, sample rate, bits) | — | Pass |
+| DXF | TEXT, MTEXT, ATTRIB, INSERT, DIMENSION entities | Version, units, layers | — | Pass |
+
+Run benchmarks yourself: `go test -bench=. -benchmem ./contentextractor/`
 
 ## Agent Cold Start
 
@@ -73,11 +129,15 @@ go test ./...
 ### Usage
 
 ```go
-import "github.com/dmorris/content-extractor/extractor"
+import "github.com/dmorris/content-extractor/contentextractor"
 
-result, err := extractor.Extract(ctx, reader, "application/pdf")
-fmt.Println(result.Text)
-fmt.Println(result.Metadata)
+// Auto-detect format and extract (reader must implement io.ReadSeeker)
+result, err := contentextractor.Extract(ctx, reader, "")
+fmt.Println(result.Text)            // extracted text content
+fmt.Println(result.Metadata)        // structured metadata map
+
+// Or specify MIME type explicitly
+result, err = contentextractor.Extract(ctx, reader, "application/pdf")
 ```
 
 ## Project Structure

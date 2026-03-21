@@ -46,12 +46,12 @@ gofmt -w .                   # format all Go files
 ## Structure
 
 - `extractor/` — core extraction interface, registry, and result types
-- `formats/office/` — Microsoft Office extractors (DOCX, XLSX, PPTX, legacy)
+- `formats/office/` — Microsoft Office extractors (DOCX, XLSX, PPTX)
 - `formats/odf/` — Open Document Format extractors (ODT, ODS, ODP)
 - `formats/pdf/` — PDF text extraction
 - `formats/image/` — image metadata extraction (EXIF, PNG metadata)
 - `formats/audio/` — audio metadata extraction (ID3, Vorbis)
-- `formats/cad/` — CAD text/metadata extraction (DXF, DWG)
+- `formats/cad/` — CAD text/metadata extraction (DXF)
 - `metadata/` — metadata model and normalization
 - `detect/` — MIME type / format detection (magic bytes + extension)
 - `testdata/` — test fixture files

@@ -8,6 +8,7 @@ import (
 
 	"github.com/dmorris/content-extractor/detect"
 	"github.com/dmorris/content-extractor/extractor"
+	"github.com/dmorris/content-extractor/formats/audio"
 	"github.com/dmorris/content-extractor/formats/image"
 	"github.com/dmorris/content-extractor/formats/odf"
 	"github.com/dmorris/content-extractor/formats/office"
@@ -25,6 +26,7 @@ func NewRegistry() *extractor.Registry {
 	odf.Register(r)
 	pdf.Register(r)
 	image.Register(r)
+	audio.Register(r)
 	return r
 }
 

@@ -176,6 +176,26 @@ func TestIntegration_PNG(t *testing.T) {
 	}
 }
 
+func TestIntegration_MP3(t *testing.T) {
+	data, err := os.ReadFile("../testdata/simple.mp3")
+	if err != nil {
+		t.Fatalf("failed to read test file: %v", err)
+	}
+	result, err := Extract(context.Background(), bytes.NewReader(data), "audio/mpeg")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Metadata.Get(metadata.KeyTitle) != "Test Song" {
+		t.Errorf("Title = %q, want %q", result.Metadata.Get(metadata.KeyTitle), "Test Song")
+	}
+	if result.Metadata.Get(metadata.KeyCreator) != "Test Artist" {
+		t.Errorf("Creator = %q, want %q", result.Metadata.Get(metadata.KeyCreator), "Test Artist")
+	}
+	if !strings.Contains(result.Text, "Test Song") {
+		t.Errorf("Text = %q, want to contain 'Test Song'", result.Text)
+	}
+}
+
 func TestIntegration_SupportedTypes(t *testing.T) {
 	reg := NewRegistry()
 	types := reg.SupportedTypes()

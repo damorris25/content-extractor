@@ -74,11 +74,27 @@ export class DXFExtractor implements Extractor {
 }
 
 /**
+ * Iterate lines without creating a full array — uses indexOf to walk the string.
+ * Yields each line trimmed.
+ */
+function* iterateLines(content: string): Generator<string> {
+  let pos = 0;
+  while (pos < content.length) {
+    let end = content.indexOf('\n', pos);
+    if (end < 0) end = content.length;
+    // Strip \r if present.
+    const lineEnd = end > pos && content.charCodeAt(end - 1) === 0x0D ? end - 1 : end;
+    yield content.substring(pos, lineEnd).trim();
+    pos = end + 1;
+  }
+}
+
+/**
  * Parse a DXF file extracting text content and metadata.
  * DXF files consist of group code/value pairs organized into sections.
  */
 function parseDXF(content: string, result: ExtractionResult): void {
-  const lines = content.split(/\r?\n/);
+  const lineIter = iterateLines(content);
   const texts: string[] = [];
   const layers: string[] = [];
   const layerSeen = new Set<string>();
@@ -87,13 +103,13 @@ function parseDXF(content: string, result: ExtractionResult): void {
   let entityType = '';
   let headerVar = '';
 
-  let i = 0;
-  while (i < lines.length) {
-    const code = lines[i]!.trim();
-    i++;
-    if (i >= lines.length) break;
-    const value = lines[i]!.trim();
-    i++;
+  for (;;) {
+    const codeResult = lineIter.next();
+    if (codeResult.done) break;
+    const code = codeResult.value;
+    const valueResult = lineIter.next();
+    if (valueResult.done) break;
+    const value = valueResult.value;
 
     // Track sections.
     if (code === '0' && value === 'SECTION') {

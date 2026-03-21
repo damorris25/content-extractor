@@ -34,6 +34,10 @@ function getDOMParser(): Promise<DOMParser> {
 export async function parseXML(xmlString: string): Promise<Document> {
   // Strip BOM.
   xmlString = xmlString.replace(/^\uFEFF/, '');
+  // Strip external entity declarations to prevent XXE attacks.
+  // Browser DOMParser does not resolve external entities, but @xmldom/xmldom may.
+  // Remove all DOCTYPE declarations containing ENTITY definitions.
+  xmlString = stripDTD(xmlString);
   // Strip <?xml ...?> declarations that appear inside element content.
   // @xmldom/xmldom throws fatalError on these, but Go's encoding/xml treats
   // them as processing instructions (ignored). Browser DOMParser also ignores them.
@@ -41,6 +45,12 @@ export async function parseXML(xmlString: string): Promise<Document> {
   xmlString = stripInnerXMLDeclarations(xmlString);
   const parser = await getDOMParser();
   return parser.parseFromString(xmlString, 'application/xml');
+}
+
+/** Strip DOCTYPE declarations to prevent XXE (external entity injection). */
+function stripDTD(s: string): string {
+  // Remove <!DOCTYPE ...> declarations (including inline DTDs with [...]).
+  return s.replace(/<!DOCTYPE[^>[]*(\[[^\]]*\])?\s*>/gi, '');
 }
 
 /** Remove <?xml ...?> PIs that appear after the document prolog. */

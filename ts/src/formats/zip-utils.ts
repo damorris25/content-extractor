@@ -4,8 +4,9 @@
 import { unzipSync } from 'fflate';
 import { FileTooLargeError, CorruptInputError } from '../extractor.js';
 
-const MAX_DECOMPRESSED_ENTRY_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_DECOMPRESSED_ENTRY_SIZE = 100 * 1024 * 1024; // 100MB per entry
 const MAX_ZIP_ENTRIES = 10000;
+const MAX_TOTAL_DECOMPRESSED_SIZE = 500 * 1024 * 1024; // 500MB aggregate
 
 export interface ZipEntries {
   [name: string]: Uint8Array;
@@ -37,12 +38,25 @@ export function safeUnzip(data: Uint8Array, maxSize: number): ZipEntries {
     );
   }
 
-  // Check entry count.
+  // Check entry count and aggregate decompressed size.
   const names = Object.keys(entries);
   if (names.length > MAX_ZIP_ENTRIES) {
     throw new CorruptInputError(
       `ZIP contains too many entries: ${names.length} > ${MAX_ZIP_ENTRIES}`,
     );
+  }
+
+  let totalSize = 0;
+  for (const name of names) {
+    const entry = entries[name];
+    if (entry) {
+      totalSize += entry.byteLength;
+      if (totalSize > MAX_TOTAL_DECOMPRESSED_SIZE) {
+        throw new FileTooLargeError(
+          `ZIP total decompressed size exceeds ${MAX_TOTAL_DECOMPRESSED_SIZE} bytes`,
+        );
+      }
+    }
   }
 
   return entries;

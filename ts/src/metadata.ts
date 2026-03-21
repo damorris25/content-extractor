@@ -31,7 +31,7 @@ export const KEY_REVISION = 'office:revision';
 
 /** Get the first value for a key, or empty string. */
 export function metadataGet(m: Metadata | null | undefined, key: string): string {
-  if (!m) return '';
+  if (!m || !isSafeKey(key)) return '';
   const vals = m[key];
   if (!vals || vals.length === 0) return '';
   return vals[0]!;
@@ -39,12 +39,13 @@ export function metadataGet(m: Metadata | null | undefined, key: string): string
 
 /** Get all values for a key, or empty array. */
 export function metadataGetAll(m: Metadata | null | undefined, key: string): string[] {
-  if (!m) return [];
+  if (!m || !isSafeKey(key)) return [];
   return m[key] ?? [];
 }
 
 /** Set a key to a single value. Empty values remove the key. NUL bytes stripped. */
 export function metadataSet(m: Metadata, key: string, value: string): void {
+  if (!isSafeKey(key)) return;
   value = stripNUL(value);
   if (value === '') {
     delete m[key];
@@ -55,6 +56,7 @@ export function metadataSet(m: Metadata, key: string, value: string): void {
 
 /** Append a value to a key. Empty values are ignored. NUL bytes stripped. */
 export function metadataAdd(m: Metadata, key: string, value: string): void {
+  if (!isSafeKey(key)) return;
   value = stripNUL(value);
   if (value === '') return;
   const existing = m[key];
@@ -67,14 +69,22 @@ export function metadataAdd(m: Metadata, key: string, value: string): void {
 
 /** Check if a key exists with at least one value. */
 export function metadataHas(m: Metadata | null | undefined, key: string): boolean {
-  if (!m) return false;
+  if (!m || !isSafeKey(key)) return false;
   const vals = m[key];
   return !!vals && vals.length > 0;
 }
 
-/** Create a new empty Metadata object. */
+/** Dangerous keys that could cause prototype pollution. */
+const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+/** Check if a key is safe for use as a metadata property. */
+function isSafeKey(key: string): boolean {
+  return !DANGEROUS_KEYS.has(key);
+}
+
+/** Create a new empty Metadata object (null-prototype to prevent prototype pollution). */
 export function createMetadata(): Metadata {
-  return {};
+  return Object.create(null) as Metadata;
 }
 
 // --- Normalization ---

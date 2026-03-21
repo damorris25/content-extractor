@@ -412,19 +412,25 @@ function tiffTypeSize(type: number): number {
   }
 }
 
-/** Get the offset where the actual data lives (inline or pointed-to). */
+/** Get the offset where the actual data lives (inline or pointed-to). Returns -1 on invalid. */
 function dataOffset(
+  tiffData: Uint8Array,
   view: DataView,
   entry: IFDEntry,
   littleEndian: boolean,
 ): number {
+  // Validate count to prevent overflow (count is uint32, max type size is 8).
+  if (entry.count > 0xFFFFFF) return -1; // ~16M entries max — generous but prevents overflow
   const totalBytes = entry.count * tiffTypeSize(entry.type);
   if (totalBytes <= 4) {
     // Data is inline in the value/offset field.
     return entry.valueOffset;
   }
   // Data is at the offset stored in the value/offset field.
-  return view.getUint32(entry.valueOffset, littleEndian);
+  if (entry.valueOffset + 4 > tiffData.byteLength) return -1;
+  const off = view.getUint32(entry.valueOffset, littleEndian);
+  if (off >= tiffData.byteLength) return -1;
+  return off;
 }
 
 function readStringTag(
@@ -434,8 +440,8 @@ function readStringTag(
   littleEndian: boolean,
 ): string {
   if (entry.type !== 2 && entry.type !== 7) return '';
-  const off = dataOffset(view, entry, littleEndian);
-  if (off + entry.count > tiffData.byteLength) return '';
+  const off = dataOffset(tiffData, view, entry, littleEndian);
+  if (off < 0 || off + entry.count > tiffData.byteLength) return '';
   let str = '';
   for (let i = 0; i < entry.count; i++) {
     const ch = tiffData[off + i]!;
@@ -463,8 +469,8 @@ function readRationalTag(
   littleEndian: boolean,
 ): string {
   if (entry.type !== 5 && entry.type !== 10) return '';
-  const off = dataOffset(view, entry, littleEndian);
-  if (off + 8 > tiffData.byteLength) return '';
+  const off = dataOffset(tiffData, view, entry, littleEndian);
+  if (off < 0 || off + 8 > tiffData.byteLength) return '';
   const num = view.getUint32(off, littleEndian);
   const den = view.getUint32(off + 4, littleEndian);
   if (den === 0) return String(num);
@@ -479,7 +485,8 @@ function readRationals(
   littleEndian: boolean,
 ): Array<[number, number]> {
   if (entry.type !== 5 && entry.type !== 10) return [];
-  const off = dataOffset(view, entry, littleEndian);
+  const off = dataOffset(tiffData, view, entry, littleEndian);
+  if (off < 0) return [];
   const result: Array<[number, number]> = [];
   for (let i = 0; i < entry.count; i++) {
     const rOff = off + i * 8;

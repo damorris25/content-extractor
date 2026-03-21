@@ -153,6 +153,8 @@ function readUint16LE(view: DataView, offset: number): number {
 }
 
 function readSyncsafe(data: Uint8Array, offset: number): number {
+  if (offset + 3 >= data.byteLength) return 0;
+  // Mask to 7 bits per byte (syncsafe encoding requires MSB=0).
   return (
     ((data[offset]! & 0x7F) << 21) |
     ((data[offset + 1]! & 0x7F) << 14) |
@@ -293,11 +295,18 @@ const utf16leDecoder = new TextDecoder('utf-16le');
 const utf16beDecoder = new TextDecoder('utf-16be');
 
 function decodeLatin1(data: Uint8Array): string {
-  let result = '';
-  for (let i = 0; i < data.byteLength; i++) {
-    result += String.fromCharCode(data[i]!);
+  // Decode in chunks to avoid O(n²) string concatenation.
+  const CHUNK = 8192;
+  const parts: string[] = [];
+  for (let i = 0; i < data.byteLength; i += CHUNK) {
+    const end = Math.min(i + CHUNK, data.byteLength);
+    const codes: number[] = [];
+    for (let j = i; j < end; j++) {
+      codes.push(data[j]!);
+    }
+    parts.push(String.fromCharCode(...codes));
   }
-  return result;
+  return parts.join('');
 }
 
 function decodeUTF16WithBOM(data: Uint8Array): string {

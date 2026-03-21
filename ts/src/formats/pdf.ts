@@ -17,6 +17,7 @@ import {
 
 const MIME_PDF = 'application/pdf';
 const DEFAULT_MAX_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_PAGES = 10000; // Safety cap on page iteration
 
 export class PdfExtractor implements Extractor {
   readonly maxSize: number;
@@ -78,11 +79,12 @@ export class PdfExtractor implements Extractor {
       );
     }
 
+    const numPages = Math.min(doc.numPages, MAX_PAGES);
     metadataSet(metadata, KEY_PAGE_COUNT, String(doc.numPages));
 
     const pageTexts: string[] = [];
 
-    for (let i = 1; i <= doc.numPages; i++) {
+    for (let i = 1; i <= numPages; i++) {
       checkAborted(options?.signal);
 
       try {

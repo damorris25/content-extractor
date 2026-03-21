@@ -2,7 +2,7 @@
 // Port of detect/detect.go + detect/signatures.go + detect/extensions.go
 
 import { DetectionFailedError } from './extractor.js';
-import { unzipSync } from 'fflate';
+import { safeUnzip } from './formats/zip-utils.js';
 
 /** Detector identifies file formats from content and/or filename. */
 export interface Detector {
@@ -160,16 +160,15 @@ function matchSignature(buf: Uint8Array): string | null {
   return null;
 }
 
-const MAX_ZIP_ENTRIES = 10000;
+/** Max compressed size for ZIP detection (2MB). */
+const MAX_ZIP_DETECT_SIZE = 2 * 1024 * 1024;
 
 function detectZIPFormat(data: Uint8Array): string | null {
   try {
-    // Limit to 2MB for detection.
-    const limited = data.length > 2 * 1024 * 1024 ? data.subarray(0, 2 * 1024 * 1024) : data;
-    const entries = unzipSync(limited);
+    // Limit to 2MB for detection. safeUnzip handles per-entry size + entry count limits.
+    const limited = data.length > MAX_ZIP_DETECT_SIZE ? data.subarray(0, MAX_ZIP_DETECT_SIZE) : data;
+    const entries = safeUnzip(limited, MAX_ZIP_DETECT_SIZE);
     const names = Object.keys(entries);
-
-    if (names.length > MAX_ZIP_ENTRIES) return 'application/zip';
 
     const fileSet = new Set(names);
 

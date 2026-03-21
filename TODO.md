@@ -23,10 +23,10 @@ code reference sections of this file.
 
 ## P1 — Soon (this sprint / this week)
 
-- [ ] Implement XLSX extractor (shared strings + sheet XML)
-- [ ] Implement PPTX extractor (slide XML text extraction)
-- [ ] Implement PDF text extractor (text-layer PDF, not OCR)
-- [ ] Implement ODT/ODS/ODP extractors (ZIP-based, `content.xml`)
+- [x] Implement XLSX extractor (shared strings + sheet XML)
+- [x] Implement PPTX extractor (slide XML text extraction)
+- [x] Implement PDF text extractor (text-layer PDF, not OCR) — first third-party dep: `ledongthuc/pdf` (BSD-3-Clause)
+- [x] Implement ODT/ODS/ODP extractors (ZIP-based, `content.xml`)
 
 ## P2 — Backlog (when time permits)
 
@@ -75,5 +75,9 @@ _None yet._
 - [x] 2026-03-21: DOCX extractor with metadata extraction
 - [x] 2026-03-21: Integration wiring (contentextractor convenience package)
 - [x] 2026-03-21: Contract compliance test harness (extractortest package)
+- [x] 2026-03-21: XLSX extractor with shared strings and multi-sheet support
+- [x] 2026-03-21: PPTX extractor with DrawingML text and multi-slide support
+- [x] 2026-03-21: PDF text extractor (ledongthuc/pdf, BSD-3-Clause)
+- [x] 2026-03-21: ODF extractors — ODT, ODS, ODP with shared helpers
 
 ---

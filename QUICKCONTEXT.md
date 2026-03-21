@@ -14,27 +14,25 @@ Go library for extracting text content and metadata from unstructured file forma
 | Field | Value |
 |-------|-------|
 | **Branch** | `master` |
-| **Last significant commit** | P0 foundation + plain text + DOCX extractors |
+| **Last significant commit** | Full P0 + P1: all Office, PDF, and ODF extractors |
 | **Build status** | Passing (`go build ./...`) |
-| **Test count** | 47 tests across 6 packages |
+| **Test count** | 98 tests across 9 packages |
 | **Test status** | All passing (including `-race`) |
 
 ## What's In Progress
 
-- **Current focus:** P1 — additional format extractors (XLSX, PPTX, PDF, ODF)
+- **Current focus:** P2 — image/audio/CAD metadata, legacy Office, benchmarks
 - **Active branch(es):** `master`
 - **Assigned agents:** none
 
 ## What's Recently Complete
 
-- Core types: Extractor interface, Result, sentinel errors, 2026-03-21
-- Metadata model with namespace constants and normalization helpers, 2026-03-21
-- Registry with MIME-based dispatch and format auto-detection, 2026-03-21
-- Format detection (magic bytes + ZIP inspection + extension fallback), 2026-03-21
-- Plain text extractor with streaming and UTF-8 cleanup, 2026-03-21
-- DOCX extractor with text and metadata extraction, 2026-03-21
-- Contract compliance test harness (extractortest package), 2026-03-21
-- Integration wiring (contentextractor convenience package), 2026-03-21
+- P0 foundation: core types, metadata, registry, detection, 2026-03-21
+- Plain text extractor, 2026-03-21
+- DOCX/XLSX/PPTX extractors (full OOXML suite), 2026-03-21
+- PDF text extractor (ledongthuc/pdf, BSD-3-Clause), 2026-03-21
+- ODT/ODS/ODP extractors (full ODF suite), 2026-03-21
+- Contract compliance test harness + integration tests, 2026-03-21
 
 ## What's Blocked
 
@@ -42,9 +40,10 @@ _None currently._
 
 ## What's Next
 
-1. Implement XLSX extractor (shared strings + sheet XML)
-2. Implement PPTX extractor (slide XML text extraction)
-3. Implement PDF text extractor (text-layer, not OCR)
-4. Implement ODT/ODS/ODP extractors (ZIP-based, `content.xml`)
+1. Image metadata extraction (EXIF/PNG)
+2. Audio metadata extraction (ID3/Vorbis)
+3. CAD text extraction (DXF)
+4. Legacy Office formats (DOC/XLS/PPT)
+5. Benchmark suite
 
 ---

@@ -83,5 +83,6 @@ _None yet._
 - [x] 2026-03-21: Benchmark suite (per-format throughput, text scaling, detection overhead)
 - [x] 2026-03-21: License audit tooling (scripts/check-licenses.sh, all deps pass)
 - [x] 2026-03-21: Rich test fixtures + accuracy test suite (7 formats, Unicode, known expected values)
+- [x] 2026-03-21: Security hardening — decompression limits, uint32 overflow fixes, panic recovery, NUL stripping, type confusion prevention
 
 ---

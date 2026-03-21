@@ -14,14 +14,14 @@ Go library for extracting text content and metadata from unstructured file forma
 | Field | Value |
 |-------|-------|
 | **Branch** | `master` |
-| **Last significant commit** | Rich test fixtures + accuracy tests + benchmarks |
+| **Last significant commit** | Security hardening across all extractors |
 | **Build status** | Passing (`go build ./...`) |
 | **Test count** | 139 tests across 12 packages |
 | **Test status** | All passing (including `-race`) |
 
 ## What's In Progress
 
-- **Current focus:** P2 — image/audio/CAD metadata, legacy Office, benchmarks
+- **Current focus:** Security hardening complete; all P0-P2 work done
 - **Active branch(es):** `master`
 - **Assigned agents:** none
 
@@ -37,6 +37,7 @@ Go library for extracting text content and metadata from unstructured file forma
 - Audio metadata extractor (ID3v2, Vorbis, WAV RIFF — pure Go), 2026-03-21
 - DXF text/metadata extractor (TEXT, MTEXT, layers, header vars), 2026-03-21
 - Benchmark suite + license audit + accuracy tests, 2026-03-21
+- Security hardening (18 files, decompression limits, overflow fixes, panic recovery), 2026-03-21
 
 ## What's Blocked
 

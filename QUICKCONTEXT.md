@@ -14,9 +14,9 @@ Go library for extracting text content and metadata from unstructured file forma
 | Field | Value |
 |-------|-------|
 | **Branch** | `master` |
-| **Last significant commit** | Full P0 + P1: all Office, PDF, and ODF extractors |
+| **Last significant commit** | Audio metadata extractor (MP3, OGG, FLAC, WAV) |
 | **Build status** | Passing (`go build ./...`) |
-| **Test count** | 98 tests across 9 packages |
+| **Test count** | 123 tests across 11 packages |
 | **Test status** | All passing (including `-race`) |
 
 ## What's In Progress
@@ -33,6 +33,8 @@ Go library for extracting text content and metadata from unstructured file forma
 - PDF text extractor (ledongthuc/pdf, BSD-3-Clause), 2026-03-21
 - ODT/ODS/ODP extractors (full ODF suite), 2026-03-21
 - Contract compliance test harness + integration tests, 2026-03-21
+- Image metadata extractor (EXIF, PNG tEXt, dimensions), 2026-03-21
+- Audio metadata extractor (ID3v2, Vorbis, WAV RIFF — pure Go), 2026-03-21
 
 ## What's Blocked
 
@@ -40,9 +42,7 @@ _None currently._
 
 ## What's Next
 
-1. Image metadata extraction (EXIF/PNG)
-2. Audio metadata extraction (ID3/Vorbis)
-3. CAD text extraction (DXF)
+1. CAD text extraction (DXF)
 4. Legacy Office formats (DOC/XLS/PPT)
 5. Benchmark suite
 

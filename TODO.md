@@ -30,8 +30,8 @@ code reference sections of this file.
 
 ## P2 — Backlog (when time permits)
 
-- [ ] Image metadata extraction (EXIF from JPEG/TIFF, basic PNG metadata)
-- [ ] Audio metadata extraction (ID3v2 from MP3, Vorbis comments from OGG/FLAC)
+- [x] Image metadata extraction (EXIF from JPEG/TIFF, basic PNG metadata)
+- [x] Audio metadata extraction (ID3v2 from MP3, Vorbis comments from OGG/FLAC, WAV RIFF INFO)
 - [ ] CAD text extraction (DXF text entities — DXF is ASCII-parseable)
 - [ ] Legacy Office formats (DOC, XLS, PPT — OLE2 compound document)
 - [ ] DWG support (binary CAD — may require third-party library)
@@ -79,5 +79,7 @@ _None yet._
 - [x] 2026-03-21: PPTX extractor with DrawingML text and multi-slide support
 - [x] 2026-03-21: PDF text extractor (ledongthuc/pdf, BSD-3-Clause)
 - [x] 2026-03-21: ODF extractors — ODT, ODS, ODP with shared helpers
+- [x] 2026-03-21: Image metadata extractor (JPEG EXIF, PNG tEXt, dimensions for all formats)
+- [x] 2026-03-21: Audio metadata extractor (MP3 ID3v2, OGG/FLAC Vorbis, WAV RIFF — pure Go)
 
 ---

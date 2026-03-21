@@ -87,8 +87,16 @@ func (e *OCREngine) RecognizeBytes(ctx context.Context, data []byte) (text strin
 			return
 		}
 
-		// Get mean confidence (0-100 scale).
-		conf := float64(e.client.MeanConfidence())
+		// Compute mean confidence from word bounding boxes.
+		var conf float64
+		boxes, boxErr := e.client.GetBoundingBoxes(gosseract.RIL_WORD)
+		if boxErr == nil && len(boxes) > 0 {
+			var sum float64
+			for _, box := range boxes {
+				sum += box.Confidence
+			}
+			conf = sum / float64(len(boxes))
+		}
 
 		ch <- result{text: strings.TrimSpace(ocrText), confidence: conf}
 	}()

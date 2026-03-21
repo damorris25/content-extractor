@@ -1,0 +1,267 @@
+// CONTRACT:C1-EXTRACTOR.1.0
+package image
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"image"
+	_ "image/gif"  // register GIF decoder
+	_ "image/jpeg" // register JPEG decoder
+	_ "image/png"  // register PNG decoder
+	"io"
+	"strings"
+
+	goexif "github.com/rwcarlsen/goexif/exif"
+
+	"github.com/dmorris/content-extractor/extractor"
+	"github.com/dmorris/content-extractor/metadata"
+)
+
+const (
+	// DefaultMaxImageSize is the maximum size for an image file.
+	DefaultMaxImageSize = 100 * 1024 * 1024 // 100MB
+)
+
+var supportedMIMEs = map[string]bool{
+	"image/jpeg": true,
+	"image/png":  true,
+	"image/tiff": true,
+	"image/bmp":  true,
+	"image/gif":  true,
+	"image/webp": true,
+}
+
+// Extractor extracts metadata from image files.
+// Text content is empty for images — all data is in Metadata.
+// Safe for concurrent use.
+type Extractor struct {
+	MaxSize int64
+}
+
+// New creates a new image metadata extractor.
+func New() *Extractor {
+	return &Extractor{}
+}
+
+func (e *Extractor) maxSize() int64 {
+	if e.MaxSize > 0 {
+		return e.MaxSize
+	}
+	return DefaultMaxImageSize
+}
+
+// Extract reads an image file from r and returns extracted metadata.
+func (e *Extractor) Extract(ctx context.Context, r io.Reader, mime string) (*extractor.Result, error) {
+	if r == nil {
+		return nil, extractor.ErrNilReader
+	}
+	if !supportedMIMEs[mime] {
+		return nil, extractor.ErrUnsupportedFormat
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	// Buffer input for multiple passes (dimensions + EXIF).
+	limited := io.LimitReader(r, e.maxSize()+1)
+	data, err := io.ReadAll(limited)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", extractor.ErrCorruptInput, err)
+	}
+	if int64(len(data)) > e.maxSize() {
+		return nil, extractor.ErrFileTooLarge
+	}
+	if len(data) == 0 {
+		return &extractor.Result{ContentType: mime, Metadata: make(metadata.Metadata)}, nil
+	}
+
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	result := &extractor.Result{
+		ContentType: mime,
+		Metadata:    make(metadata.Metadata),
+	}
+	result.Metadata.Set(metadata.KeyFormat, mime)
+
+	// Extract image dimensions via stdlib.
+	extractDimensions(data, result)
+
+	// Extract EXIF metadata (JPEG and TIFF only).
+	if mime == "image/jpeg" || mime == "image/tiff" {
+		extractEXIF(data, result)
+	}
+
+	// Extract PNG text chunks.
+	if mime == "image/png" {
+		extractPNGText(data, result)
+	}
+
+	// Build a text summary from key metadata for searchability.
+	result.Text = buildTextSummary(result.Metadata)
+
+	return result, nil
+}
+
+// SupportedMIMETypes returns the MIME types this extractor handles.
+func (e *Extractor) SupportedMIMETypes() []string {
+	types := make([]string, 0, len(supportedMIMEs))
+	for mime := range supportedMIMEs {
+		types = append(types, mime)
+	}
+	return types
+}
+
+// extractDimensions uses stdlib image.DecodeConfig to get width/height.
+func extractDimensions(data []byte, result *extractor.Result) {
+	cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
+	if err != nil {
+		return
+	}
+	if cfg.Width > 0 {
+		result.Metadata.Set("exif:width", fmt.Sprintf("%d", cfg.Width))
+	}
+	if cfg.Height > 0 {
+		result.Metadata.Set("exif:height", fmt.Sprintf("%d", cfg.Height))
+	}
+}
+
+// extractEXIF parses EXIF data from JPEG/TIFF files.
+func extractEXIF(data []byte, result *extractor.Result) {
+	x, err := goexif.Decode(bytes.NewReader(data))
+	if err != nil {
+		return // No EXIF data is not an error.
+	}
+
+	// Camera make/model.
+	if tag, err := x.Get(goexif.Make); err == nil {
+		result.Metadata.Set("exif:make", cleanTag(tag.String()))
+	}
+	if tag, err := x.Get(goexif.Model); err == nil {
+		result.Metadata.Set("exif:model", cleanTag(tag.String()))
+	}
+
+	// Date/time.
+	if tag, err := x.Get(goexif.DateTimeOriginal); err == nil {
+		result.Metadata.Set(metadata.KeyDate, metadata.NormalizeDate(cleanTag(tag.String())))
+	} else if tag, err := x.Get(goexif.DateTime); err == nil {
+		result.Metadata.Set(metadata.KeyDate, metadata.NormalizeDate(cleanTag(tag.String())))
+	}
+
+	// Orientation.
+	if tag, err := x.Get(goexif.Orientation); err == nil {
+		result.Metadata.Set("exif:orientation", cleanTag(tag.String()))
+	}
+
+	// Software.
+	if tag, err := x.Get(goexif.Software); err == nil {
+		result.Metadata.Set(metadata.KeyApplication, cleanTag(tag.String()))
+	}
+
+	// Artist/copyright.
+	if tag, err := x.Get(goexif.Artist); err == nil {
+		result.Metadata.Set(metadata.KeyCreator, cleanTag(tag.String()))
+	}
+	if tag, err := x.Get(goexif.Copyright); err == nil {
+		result.Metadata.Set("exif:copyright", cleanTag(tag.String()))
+	}
+
+	// Image description.
+	if tag, err := x.Get(goexif.ImageDescription); err == nil {
+		result.Metadata.Set(metadata.KeyDescription, cleanTag(tag.String()))
+	}
+
+	// GPS coordinates.
+	if lat, lon, err := x.LatLong(); err == nil {
+		result.Metadata.Set("exif:gps-latitude", fmt.Sprintf("%.6f", lat))
+		result.Metadata.Set("exif:gps-longitude", fmt.Sprintf("%.6f", lon))
+	}
+
+	// Exposure.
+	if tag, err := x.Get(goexif.ExposureTime); err == nil {
+		result.Metadata.Set("exif:exposure-time", cleanTag(tag.String()))
+	}
+	if tag, err := x.Get(goexif.FNumber); err == nil {
+		result.Metadata.Set("exif:f-number", cleanTag(tag.String()))
+	}
+	if tag, err := x.Get(goexif.ISOSpeedRatings); err == nil {
+		result.Metadata.Set("exif:iso", cleanTag(tag.String()))
+	}
+	if tag, err := x.Get(goexif.FocalLength); err == nil {
+		result.Metadata.Set("exif:focal-length", cleanTag(tag.String()))
+	}
+}
+
+// extractPNGText extracts tEXt chunks from PNG data.
+// PNG text chunks have the format: keyword\0text
+func extractPNGText(data []byte, result *extractor.Result) {
+	// PNG signature is 8 bytes, then chunks follow.
+	if len(data) < 8 {
+		return
+	}
+	pos := 8 // skip signature
+
+	for pos+12 <= len(data) {
+		// Chunk: 4 bytes length, 4 bytes type, data, 4 bytes CRC.
+		chunkLen := int(data[pos])<<24 | int(data[pos+1])<<16 | int(data[pos+2])<<8 | int(data[pos+3])
+		chunkType := string(data[pos+4 : pos+8])
+
+		if chunkLen < 0 || pos+12+chunkLen > len(data) {
+			break
+		}
+
+		chunkData := data[pos+8 : pos+8+chunkLen]
+
+		if chunkType == "tEXt" {
+			// Format: keyword\0text
+			if idx := bytes.IndexByte(chunkData, 0); idx >= 0 {
+				key := string(chunkData[:idx])
+				val := string(chunkData[idx+1:])
+				pngKey := "png:" + strings.ToLower(key)
+				result.Metadata.Set(pngKey, val)
+
+				// Map well-known PNG keys to standard metadata.
+				switch strings.ToLower(key) {
+				case "title":
+					result.Metadata.Set(metadata.KeyTitle, val)
+				case "author":
+					result.Metadata.Set(metadata.KeyCreator, val)
+				case "description":
+					result.Metadata.Set(metadata.KeyDescription, val)
+				case "software":
+					result.Metadata.Set(metadata.KeyApplication, val)
+				}
+			}
+		}
+
+		pos += 12 + chunkLen // length(4) + type(4) + data + crc(4)
+	}
+}
+
+// buildTextSummary creates a searchable text representation from metadata.
+func buildTextSummary(m metadata.Metadata) string {
+	var parts []string
+	for _, key := range []string{
+		metadata.KeyTitle,
+		metadata.KeyDescription,
+		metadata.KeyCreator,
+		"exif:make",
+		"exif:model",
+	} {
+		if v := m.Get(key); v != "" {
+			parts = append(parts, v)
+		}
+	}
+	return strings.Join(parts, "\n")
+}
+
+// cleanTag removes quotes from EXIF tag string values.
+func cleanTag(s string) string {
+	s = strings.TrimSpace(s)
+	if len(s) >= 2 && s[0] == '"' && s[len(s)-1] == '"' {
+		s = s[1 : len(s)-1]
+	}
+	return s
+}

@@ -148,6 +148,34 @@ func TestIntegration_ODP(t *testing.T) {
 	}
 }
 
+func TestIntegration_JPEG(t *testing.T) {
+	data, err := os.ReadFile("../testdata/simple.jpg")
+	if err != nil {
+		t.Fatalf("failed to read test file: %v", err)
+	}
+	result, err := Extract(context.Background(), bytes.NewReader(data), "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Metadata.Get("exif:width") != "100" {
+		t.Errorf("width = %q, want %q", result.Metadata.Get("exif:width"), "100")
+	}
+}
+
+func TestIntegration_PNG(t *testing.T) {
+	data, err := os.ReadFile("../testdata/text.png")
+	if err != nil {
+		t.Fatalf("failed to read test file: %v", err)
+	}
+	result, err := Extract(context.Background(), bytes.NewReader(data), "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Metadata.Get(metadata.KeyTitle) != "Green Square" {
+		t.Errorf("Title = %q, want %q", result.Metadata.Get(metadata.KeyTitle), "Green Square")
+	}
+}
+
 func TestIntegration_SupportedTypes(t *testing.T) {
 	reg := NewRegistry()
 	types := reg.SupportedTypes()

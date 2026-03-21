@@ -53,6 +53,13 @@ Benchmarks run on Apple M5, Go 1.26.1. All times are per-operation on minimal te
 | FLAC (Vorbis) | 205 MB/s | 0.9 us | 47 | 2 KB |
 | WAV (RIFF) | 455 MB/s | 0.5 us | 23 | 1 KB |
 | DXF (CAD) | 266 MB/s | 1.7 us | 53 | 6 KB |
+| GeoTIFF (metadata) | — | 4.5 us | 206 | 18 KB |
+| **OCR — PNG** | — | **12 ms** | 8 | 550 B |
+| **OCR — JPEG** | — | **13 ms** | 8 | 546 B |
+| OCR + metadata (PNG) | — | 12 ms | 30 | 8 KB |
+
+> OCR benchmarks require Tesseract (`CGO_ENABLED=1 go test -tags ocr -bench=BenchmarkOCR`).
+> OCR throughput is dominated by Tesseract recognition time, not Go overhead (30 allocs vs 8 for raw OCR).
 
 ### Text Scaling (Plain Text)
 
@@ -86,6 +93,16 @@ All extractors pass accuracy tests against rich test fixtures with known expecte
 | WAV | Text summary | RIFF INFO + fmt (channels, sample rate, bits) | — | Pass |
 | DXF | TEXT, MTEXT, ATTRIB, INSERT, DIMENSION entities | Version, units, layers | — | Pass |
 
+### Go OCR Accuracy
+
+| Fixture | Expected Text | Recognized | Confidence | Status |
+|---------|--------------|------------|------------|--------|
+| ocr-text.png | "Hello World 12345" | "Hello World 12345" | >50% | Pass |
+| ocr-text.jpg | "Hello World 12345" | "Hello World 12345" | >50% | Pass |
+
+> OCR accuracy depends on image quality, font, resolution, and Tesseract model version.
+> Bitmap-rendered test fixtures use a 5x7 pixel font at 200x50 resolution.
+
 Run benchmarks yourself: `go test -bench=. -benchmem ./contentextractor/`
 
 ## TypeScript Performance
@@ -115,6 +132,11 @@ All times are per-operation averages over 500 iterations after warmup.
 | WAV (RIFF) | 240 B | 1 us | 722,152 |
 | DXF (CAD) | 452 B | 3 us | 301,978 |
 | DXF (rich) | 723 B | 4 us | 241,560 |
+| **OCR — PNG** | 1.2 KB | **15 ms** | 67 |
+| **OCR — JPEG** | 1.5 KB | **16 ms** | 63 |
+
+> OCR requires `tesseract.js` peer dependency. First call includes ~127ms warm-up (WASM + model load).
+> Subsequent calls average 15-16ms. Worker is reused across calls (singleton pattern).
 
 ### TypeScript Accuracy
 
@@ -141,7 +163,17 @@ The TypeScript test suite asserts exact match on text, metadata, content type, a
 | WAV | Text summary | RIFF INFO + fmt (channels, sample rate, bits) | 1 (simple) | Pass |
 | DXF | TEXT, MTEXT, ATTRIB, INSERT, DIMENSION entities | Version, units, layers | 2 (simple, rich) | Pass |
 
-**Total: 37 parity tests passing, 40 golden files, 15 formats.**
+### TypeScript OCR Accuracy
+
+| Fixture | Expected Text | Recognized | Confidence | Status |
+|---------|--------------|------------|------------|--------|
+| ocr-text.png | "Hello World 12345" | "Hello World 12343" | 76% | Pass |
+| ocr-text.jpg | "Hello World 12345" | Contains "Hello" | >50% | Pass |
+
+> TypeScript OCR uses tesseract.js (WebAssembly). Minor character-level differences from Go (gosseract/CGO)
+> are expected — this is why OCR tests are separate from golden file parity tests.
+
+**Total: 37 parity tests passing, 40 golden files, 15 formats + 6 OCR tests + 5 GeoTIFF tests.**
 
 Run tests yourself: `cd ts && npx vitest run`
 
@@ -154,7 +186,7 @@ Run tests yourself: `cd ts && npx vitest run`
 | CJS bundle | 42 KB (13 KB gzipped) |
 | Source lines | ~4,200 |
 | Runtime dependencies | 1 (`fflate`, MIT, ~13 KB gzipped) |
-| Test execution | 20 ms (34 tests) |
+| Test execution | 29 ms (48 tests) |
 
 ### TypeScript Quick Start
 

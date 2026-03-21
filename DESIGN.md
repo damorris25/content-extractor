@@ -511,6 +511,13 @@ wrong output, compare its intermediate state against the oracle's.
 This generalizes to any project where you can measure distance from ground
 truth across multiple code paths.
 
+**In this project:** The Go implementation is the oracle. It generates golden
+files (`scripts/gen-golden-json.go`) containing deterministic JSON output for
+every test fixture. The TypeScript implementation asserts exact match against
+these golden files. When a TypeScript test fails, the golden file tells you
+what the correct output should be — you debug the TypeScript code, not the
+specification. This is the oracle pattern applied to cross-language parity.
+
 ---
 
 ## 9. The Steward: Automated Quality Scanning
@@ -584,6 +591,7 @@ QA is fully automated — no separate QA agent:
 | Encode corrections as templates | `agents/subagent-prompts/` for repeatable tasks |
 | Fast inner loops | Testing Cascade T0-T5 |
 | Parallel by default | Worktree isolation, subagent templates, fan-out patterns |
+| Cross-language parity via oracles | Go generates golden files, TypeScript asserts exact match |
 
 ---
 
@@ -658,6 +666,37 @@ scan. The convention — quoted = question, unquoted = command — emerged from
 wanting each role to own a slice of project health without requiring the full
 persona invocation. Each agent has a `commands/` directory; drop a `.sh` file
 in it and it's immediately available. Zero changes to `bin/ask` needed.
+
+### Why golden file parity for cross-language ports
+
+The TypeScript port must produce identical output to Go for identical inputs.
+We considered three verification strategies:
+
+1. **Shared test assertions** — duplicate expected values in both test suites.
+   Problem: assertions drift independently, and "both pass" doesn't mean "both
+   produce the same output."
+
+2. **Runtime comparison** — run both implementations on the same input and
+   compare at test time. Problem: requires Go toolchain in the TS test
+   environment, adds complexity and flakiness.
+
+3. **Golden files** (chosen) — Go generates deterministic JSON files containing
+   `{ text, metadata, contentType, language }` for every test fixture. TypeScript
+   asserts exact match against these files. The golden files are checked into the
+   repo and regenerated whenever Go's extractors change.
+
+Golden files won because they're simple, debuggable (you can read the JSON),
+and create a clear oracle relationship: Go is the source of truth, TypeScript
+proves conformance. When a parity test fails, you know immediately whether
+Go changed or TypeScript diverged.
+
+**Key implementation details:**
+- `scripts/gen-golden-json.go` generates all golden files deterministically
+  (sorted metadata keys and values)
+- Golden files live in `ts/__tests__/golden/` (37 files, one per test fixture)
+- TypeScript normalizes metadata identically before comparison
+- PDF golden files are deferred (Go uses `ledongthuc/pdf`, TS uses `pdfjs-dist`,
+  which may produce slightly different text)
 
 ### How this repo was built
 

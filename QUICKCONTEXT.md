@@ -14,9 +14,9 @@ Go library for extracting text content and metadata from unstructured file forma
 | Field | Value |
 |-------|-------|
 | **Branch** | `master` |
-| **Last significant commit** | Audio metadata extractor (MP3, OGG, FLAC, WAV) |
+| **Last significant commit** | DXF text/metadata extractor for CAD files |
 | **Build status** | Passing (`go build ./...`) |
-| **Test count** | 123 tests across 11 packages |
+| **Test count** | 132 tests across 12 packages |
 | **Test status** | All passing (including `-race`) |
 
 ## What's In Progress
@@ -35,6 +35,7 @@ Go library for extracting text content and metadata from unstructured file forma
 - Contract compliance test harness + integration tests, 2026-03-21
 - Image metadata extractor (EXIF, PNG tEXt, dimensions), 2026-03-21
 - Audio metadata extractor (ID3v2, Vorbis, WAV RIFF — pure Go), 2026-03-21
+- DXF text/metadata extractor (TEXT, MTEXT, layers, header vars), 2026-03-21
 
 ## What's Blocked
 
@@ -42,8 +43,8 @@ _None currently._
 
 ## What's Next
 
-1. CAD text extraction (DXF)
-4. Legacy Office formats (DOC/XLS/PPT)
-5. Benchmark suite
+1. Legacy Office formats (DOC/XLS/PPT)
+2. DWG support (uncertain — proprietary format)
+3. Benchmark suite
 
 ---

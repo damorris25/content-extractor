@@ -196,6 +196,23 @@ func TestIntegration_MP3(t *testing.T) {
 	}
 }
 
+func TestIntegration_DXF(t *testing.T) {
+	data, err := os.ReadFile("../testdata/simple.dxf")
+	if err != nil {
+		t.Fatalf("failed to read test file: %v", err)
+	}
+	result, err := Extract(context.Background(), bytes.NewReader(data), "image/vnd.dxf")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(result.Text, "Floor Plan") {
+		t.Errorf("Text = %q, want to contain 'Floor Plan'", result.Text)
+	}
+	if result.Metadata.Get("cad:version") != "AC1027" {
+		t.Errorf("version = %q, want %q", result.Metadata.Get("cad:version"), "AC1027")
+	}
+}
+
 func TestIntegration_SupportedTypes(t *testing.T) {
 	reg := NewRegistry()
 	types := reg.SupportedTypes()

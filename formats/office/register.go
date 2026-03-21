@@ -7,4 +7,5 @@ import "github.com/dmorris/content-extractor/extractor"
 func Register(r *extractor.Registry) {
 	r.Register(NewDocx())
 	r.Register(NewXlsx())
+	r.Register(NewPptx())
 }

@@ -73,6 +73,24 @@ func TestIntegration_XLSX(t *testing.T) {
 	}
 }
 
+func TestIntegration_PPTX(t *testing.T) {
+	data, err := os.ReadFile("../testdata/simple.pptx")
+	if err != nil {
+		t.Fatalf("failed to read test file: %v", err)
+	}
+
+	result, err := Extract(context.Background(), bytes.NewReader(data), "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(result.Text, "Welcome to the Presentation") {
+		t.Errorf("Text = %q, want to contain 'Welcome to the Presentation'", result.Text)
+	}
+	if result.Metadata.Get(metadata.KeyTitle) != "Test Presentation" {
+		t.Errorf("Title = %q, want %q", result.Metadata.Get(metadata.KeyTitle), "Test Presentation")
+	}
+}
+
 func TestIntegration_SupportedTypes(t *testing.T) {
 	reg := NewRegistry()
 	types := reg.SupportedTypes()

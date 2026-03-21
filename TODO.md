@@ -95,5 +95,15 @@ _None yet._
 - [x] 2026-03-21: TypeScript port — browser-first, 34 golden file parity tests, 1 runtime dep (fflate)
 - [x] 2026-03-21: README updated with dual-language docs, parity metrics, TS usage examples
 - [x] 2026-03-21: GitHub repo created and pushed (damorris25/content-extractor, master + main)
+- [x] 2026-03-21: TypeScript security hardening (9 fixes):
+  - High: prototype pollution — `Object.create(null)` + key rejection for `__proto__`/`constructor`/`prototype`
+  - Medium: ZIP bomb in detect.ts — replaced raw `unzipSync` with `safeUnzip`
+  - Medium: aggregate ZIP decompressed size limit (500MB) in zip-utils.ts
+  - Medium: DXF memory reduction — generator-based line iteration instead of `.split()`
+  - Medium: `readSyncsafe` bounds check in audio.ts
+  - Medium: IFD `dataOffset` validation with count cap in image.ts
+  - Low: O(n²) Latin-1 decode → chunked `fromCharCode` in audio.ts
+  - Low: PDF page iteration capped at 10K in pdf.ts
+  - Low: XXE protection via DOCTYPE stripping for xmldom in xml-utils.ts
 
 ---

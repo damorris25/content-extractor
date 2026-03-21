@@ -1,0 +1,16 @@
+{
+  "text": "Employee\tDepartment\tSalary\nAlice Chen\tEngineering\t125000\nBob Martinez\tMarketing\t98000\nCarol Tanaka\tSales\t105000",
+  "metadata": {
+    "dc:creator": [
+      "HR Department"
+    ],
+    "dc:format": [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    ],
+    "dc:title": [
+      "Employee Compensation Data"
+    ]
+  },
+  "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "language": ""
+}

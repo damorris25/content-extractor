@@ -1,0 +1,34 @@
+{
+  "text": "First paragraph.\nSecond paragraph.\nThird paragraph.",
+  "metadata": {
+    "dc:creator": [
+      "Author"
+    ],
+    "dc:date": [
+      "2026-03-21T10:00:00Z"
+    ],
+    "dc:format": [
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ],
+    "dc:modified": [
+      "2026-03-21T12:00:00Z"
+    ],
+    "dc:title": [
+      "Multi Paragraph"
+    ],
+    "office:application": [
+      "content-extractor test"
+    ],
+    "office:char-count": [
+      "13"
+    ],
+    "office:page-count": [
+      "1"
+    ],
+    "office:word-count": [
+      "2"
+    ]
+  },
+  "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "language": ""
+}

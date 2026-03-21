@@ -1,0 +1,19 @@
+{
+  "text": "Floor Plan - Level 1\nMain Entrance\nConference Room\nCapacity: 20\nEmergency Exit\nDoorBlock\n12.5m",
+  "metadata": {
+    "cad:layers": [
+      "Walls, Doors, Electrical"
+    ],
+    "cad:units": [
+      "Millimeters"
+    ],
+    "cad:version": [
+      "AC1027"
+    ],
+    "dc:format": [
+      "image/vnd.dxf"
+    ]
+  },
+  "contentType": "image/vnd.dxf",
+  "language": ""
+}

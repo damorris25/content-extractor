@@ -1,0 +1,28 @@
+{
+  "text": "Introduction\n\nMain Content\nDetails here\n\nConclusion",
+  "metadata": {
+    "dc:creator": [
+      "ODF Author"
+    ],
+    "dc:date": [
+      "2026-03-21T10:00:00Z"
+    ],
+    "dc:format": [
+      "application/vnd.oasis.opendocument.presentation"
+    ],
+    "dc:modified": [
+      "2026-03-21T12:00:00Z"
+    ],
+    "dc:subject": [
+      "Testing"
+    ],
+    "dc:title": [
+      "Test Document"
+    ],
+    "office:application": [
+      "content-extractor test"
+    ]
+  },
+  "contentType": "application/vnd.oasis.opendocument.presentation",
+  "language": ""
+}

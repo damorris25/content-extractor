@@ -38,7 +38,7 @@ code reference sections of this file.
 - [x] Benchmark suite for memory usage and throughput
 - [x] License audit tooling (automated check of dependency licenses)
 - [x] Quality test content for accuracy testing (rich fixtures + accuracy test suite)
-- [ ] TypeScript/WASM bindings (future language expansion)
+- [x] TypeScript library (browser-first, golden file parity with Go)
 
 ## Known Issues & Blockers
 
@@ -84,5 +84,6 @@ _None yet._
 - [x] 2026-03-21: License audit tooling (scripts/check-licenses.sh, all deps pass)
 - [x] 2026-03-21: Rich test fixtures + accuracy test suite (7 formats, Unicode, known expected values)
 - [x] 2026-03-21: Security hardening — decompression limits, uint32 overflow fixes, panic recovery, NUL stripping, type confusion prevention
+- [x] 2026-03-21: TypeScript port — browser-first, 34 golden file parity tests, 1 runtime dep (fflate)
 
 ---

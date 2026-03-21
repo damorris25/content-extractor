@@ -1,0 +1,25 @@
+{
+  "text": "Welcome to the Presentation\nBy Test Author",
+  "metadata": {
+    "dc:creator": [
+      "Slide Author"
+    ],
+    "dc:date": [
+      "2026-03-21T10:00:00Z"
+    ],
+    "dc:format": [
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    ],
+    "dc:modified": [
+      "2026-03-21T12:00:00Z"
+    ],
+    "dc:title": [
+      "Test Presentation"
+    ],
+    "office:application": [
+      "content-extractor test"
+    ]
+  },
+  "contentType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "language": ""
+}

@@ -1,0 +1,34 @@
+{
+  "text": "Midnight in the Garden of Sound\nThe Electronica Collective\nSynthetic Dreams Vol. 3\nElectronic",
+  "metadata": {
+    "audio:album": [
+      "Synthetic Dreams Vol. 3"
+    ],
+    "audio:album-artist": [
+      "Various Artists"
+    ],
+    "audio:genre": [
+      "Electronic"
+    ],
+    "audio:track": [
+      "7/12"
+    ],
+    "dc:creator": [
+      "The Electronica Collective"
+    ],
+    "dc:date": [
+      "2025-01-01T00:00:00Z"
+    ],
+    "dc:description": [
+      "Recorded live at Berlin Warehouse Sessions"
+    ],
+    "dc:format": [
+      "audio/mpeg"
+    ],
+    "dc:title": [
+      "Midnight in the Garden of Sound"
+    ]
+  },
+  "contentType": "audio/mpeg",
+  "language": ""
+}

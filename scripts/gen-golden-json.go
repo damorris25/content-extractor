@@ -1,0 +1,108 @@
+//go:build ignore
+
+// gen-golden-json generates JSON golden files for TypeScript parity testing.
+// Run: go run scripts/gen-golden-json.go
+package main
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+
+	"github.com/dmorris/content-extractor/contentextractor"
+)
+
+// goldenResult mirrors extractor.Result for JSON serialization with sorted metadata.
+type goldenResult struct {
+	Text        string              `json:"text"`
+	Metadata    map[string][]string `json:"metadata"`
+	ContentType string              `json:"contentType"`
+	Language    string              `json:"language"`
+}
+
+func main() {
+	testdataDir := "testdata"
+	outputDir := "ts/__tests__/golden"
+
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+		fmt.Fprintf(os.Stderr, "mkdir %s: %v\n", outputDir, err)
+		os.Exit(1)
+	}
+
+	entries, err := os.ReadDir(testdataDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "readdir %s: %v\n", testdataDir, err)
+		os.Exit(1)
+	}
+
+	registry := contentextractor.NewRegistry()
+	ctx := context.Background()
+	generated := 0
+	skipped := 0
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		path := filepath.Join(testdataDir, name)
+
+		data, err := os.ReadFile(path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "SKIP %s: read error: %v\n", name, err)
+			skipped++
+			continue
+		}
+
+		r := bytes.NewReader(data)
+		result, err := registry.Extract(ctx, r, "")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "SKIP %s: extraction error: %v\n", name, err)
+			skipped++
+			continue
+		}
+
+		// Build sorted metadata.
+		meta := make(map[string][]string)
+		for k, v := range result.Metadata {
+			sorted := make([]string, len(v))
+			copy(sorted, v)
+			sort.Strings(sorted)
+			meta[k] = sorted
+		}
+
+		golden := goldenResult{
+			Text:        result.Text,
+			Metadata:    meta,
+			ContentType: result.ContentType,
+			Language:    result.Language,
+		}
+
+		jsonData, err := json.MarshalIndent(golden, "", "  ")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "SKIP %s: JSON marshal error: %v\n", name, err)
+			skipped++
+			continue
+		}
+		// Ensure trailing newline.
+		if !strings.HasSuffix(string(jsonData), "\n") {
+			jsonData = append(jsonData, '\n')
+		}
+
+		outPath := filepath.Join(outputDir, name+".json")
+		if err := os.WriteFile(outPath, jsonData, 0o644); err != nil {
+			fmt.Fprintf(os.Stderr, "SKIP %s: write error: %v\n", name, err)
+			skipped++
+			continue
+		}
+		generated++
+		fmt.Printf("OK %s -> %s\n", name, outPath)
+	}
+
+	fmt.Printf("\nGenerated: %d, Skipped: %d\n", generated, skipped)
+}

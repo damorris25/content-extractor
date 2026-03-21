@@ -35,3 +35,7 @@ agents/results/
 # Test coverage
 coverage.out
 coverage.html
+
+# Node.js / TypeScript
+node_modules/
+ts/dist/

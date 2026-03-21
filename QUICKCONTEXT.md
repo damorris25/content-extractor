@@ -14,14 +14,14 @@ Go library for extracting text content and metadata from unstructured file forma
 | Field | Value |
 |-------|-------|
 | **Branch** | `master` |
-| **Last significant commit** | Security hardening across all extractors |
+| **Last significant commit** | TypeScript port with golden file parity |
 | **Build status** | Passing (`go build ./...`) |
-| **Test count** | 139 tests across 12 packages |
+| **Test count** | Go: 139 tests / 12 packages; TS: 34 parity tests |
 | **Test status** | All passing (including `-race`) |
 
 ## What's In Progress
 
-- **Current focus:** Security hardening complete; all P0-P2 work done
+- **Current focus:** TypeScript port complete; all P0-P2 + TS done
 - **Active branch(es):** `master`
 - **Assigned agents:** none
 
@@ -38,6 +38,7 @@ Go library for extracting text content and metadata from unstructured file forma
 - DXF text/metadata extractor (TEXT, MTEXT, layers, header vars), 2026-03-21
 - Benchmark suite + license audit + accuracy tests, 2026-03-21
 - Security hardening (18 files, decompression limits, overflow fixes, panic recovery), 2026-03-21
+- TypeScript port — browser-first, 34 golden file parity tests, all formats except PDF, 2026-03-21
 
 ## What's Blocked
 

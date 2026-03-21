@@ -1,0 +1,22 @@
+{
+  "text": "Technical Specification: Cloud Migration Framework\nVersion 2.1 - Last Updated December 2025\nThis document outlines the technical architecture for migrating on-premises infrastructure to a hybrid cloud environment. The framework supports AWS, Azure, and GCP as target platforms.\n1. Architecture Overview\nThe migration framework consists of three core components: the Discovery Agent, the Migration Engine, and the Validation Suite. Each component operates independently and communicates via a message queue.\n2. Data Transfer Protocol\nData transfer uses AES-256 encryption in transit with checksums verified at both source and destination. Maximum transfer rate is configurable up to 10 Gbps per stream.",
+  "metadata": {
+    "dc:creator": [
+      "Platform Engineering"
+    ],
+    "dc:description": [
+      "Technical specification for hybrid cloud migration."
+    ],
+    "dc:format": [
+      "application/vnd.oasis.opendocument.text"
+    ],
+    "dc:subject": [
+      "Cloud Architecture, Migration, Infrastructure"
+    ],
+    "dc:title": [
+      "Cloud Migration Framework"
+    ]
+  },
+  "contentType": "application/vnd.oasis.opendocument.text",
+  "language": ""
+}

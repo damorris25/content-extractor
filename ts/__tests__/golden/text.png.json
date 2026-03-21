@@ -1,0 +1,40 @@
+{
+  "text": "Green Square\nA 64x64 green square for testing\nTest Generator",
+  "metadata": {
+    "dc:creator": [
+      "Test Generator"
+    ],
+    "dc:description": [
+      "A 64x64 green square for testing"
+    ],
+    "dc:format": [
+      "image/png"
+    ],
+    "dc:title": [
+      "Green Square"
+    ],
+    "exif:height": [
+      "64"
+    ],
+    "exif:width": [
+      "64"
+    ],
+    "office:application": [
+      "gen-test-images"
+    ],
+    "png:author": [
+      "Test Generator"
+    ],
+    "png:description": [
+      "A 64x64 green square for testing"
+    ],
+    "png:software": [
+      "gen-test-images"
+    ],
+    "png:title": [
+      "Green Square"
+    ]
+  },
+  "contentType": "image/png",
+  "language": ""
+}

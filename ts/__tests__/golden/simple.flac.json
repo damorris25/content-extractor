@@ -1,0 +1,28 @@
+{
+  "text": "FLAC Test Song\nFLAC Test Artist\nFLAC Test Album\nClassical",
+  "metadata": {
+    "audio:album": [
+      "FLAC Test Album"
+    ],
+    "audio:genre": [
+      "Classical"
+    ],
+    "audio:track": [
+      "7"
+    ],
+    "dc:creator": [
+      "FLAC Test Artist"
+    ],
+    "dc:date": [
+      "2025-01-01T00:00:00Z"
+    ],
+    "dc:format": [
+      "audio/flac"
+    ],
+    "dc:title": [
+      "FLAC Test Song"
+    ]
+  },
+  "contentType": "audio/flac",
+  "language": ""
+}

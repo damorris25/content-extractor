@@ -1,0 +1,19 @@
+{
+  "text": "Building A - Ground Floor Plan\nScale: 1:100\nNorth Elevation\nLoad-bearing wall\nThickness: 300mm\nMaterial: Reinforced concrete\nFire Exit - Do Not Block\nElectrical Panel EP-01\n15.750m\n8.200m\nWindowType-A\nDoorType-B\nStairwell Access",
+  "metadata": {
+    "cad:layers": [
+      "Foundation, Structural, Electrical, Plumbing, HVAC"
+    ],
+    "cad:units": [
+      "Meters"
+    ],
+    "cad:version": [
+      "AC1032"
+    ],
+    "dc:format": [
+      "image/vnd.dxf"
+    ]
+  },
+  "contentType": "image/vnd.dxf",
+  "language": ""
+}

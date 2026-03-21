@@ -1,0 +1,28 @@
+{
+  "text": "OGG Test Song\nOGG Test Artist\nOGG Test Album\nAmbient",
+  "metadata": {
+    "audio:album": [
+      "OGG Test Album"
+    ],
+    "audio:genre": [
+      "Ambient"
+    ],
+    "audio:track": [
+      "5"
+    ],
+    "dc:creator": [
+      "OGG Test Artist"
+    ],
+    "dc:date": [
+      "2026-01-01T00:00:00Z"
+    ],
+    "dc:format": [
+      "audio/ogg"
+    ],
+    "dc:title": [
+      "OGG Test Song"
+    ]
+  },
+  "contentType": "audio/ogg",
+  "language": ""
+}

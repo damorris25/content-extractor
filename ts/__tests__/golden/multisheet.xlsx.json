@@ -1,0 +1,25 @@
+{
+  "text": "Product\tPrice\nWidget\t9.99\n\nTotal\t9.99",
+  "metadata": {
+    "dc:creator": [
+      "Spreadsheet Author"
+    ],
+    "dc:date": [
+      "2026-03-21T10:00:00Z"
+    ],
+    "dc:format": [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    ],
+    "dc:modified": [
+      "2026-03-21T12:00:00Z"
+    ],
+    "dc:title": [
+      "Sales Data"
+    ],
+    "office:application": [
+      "content-extractor test"
+    ]
+  },
+  "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "language": ""
+}

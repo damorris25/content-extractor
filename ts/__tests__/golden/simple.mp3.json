@@ -1,0 +1,28 @@
+{
+  "text": "Test Song\nTest Artist\nTest Album\nElectronic",
+  "metadata": {
+    "audio:album": [
+      "Test Album"
+    ],
+    "audio:genre": [
+      "Electronic"
+    ],
+    "audio:track": [
+      "3"
+    ],
+    "dc:creator": [
+      "Test Artist"
+    ],
+    "dc:date": [
+      "2026-01-01T00:00:00Z"
+    ],
+    "dc:format": [
+      "audio/mpeg"
+    ],
+    "dc:title": [
+      "Test Song"
+    ]
+  },
+  "contentType": "audio/mpeg",
+  "language": ""
+}

@@ -1,0 +1,13 @@
+{
+  "text": "\nPage one content.\n\nPage two content.",
+  "metadata": {
+    "dc:format": [
+      "application/pdf"
+    ],
+    "office:page-count": [
+      "2"
+    ]
+  },
+  "contentType": "application/pdf",
+  "language": ""
+}

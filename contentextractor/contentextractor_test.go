@@ -106,6 +106,48 @@ func TestIntegration_PDF(t *testing.T) {
 	}
 }
 
+func TestIntegration_ODT(t *testing.T) {
+	data, err := os.ReadFile("../testdata/simple.odt")
+	if err != nil {
+		t.Fatalf("failed to read test file: %v", err)
+	}
+	result, err := Extract(context.Background(), bytes.NewReader(data), "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(result.Text, "Hello, ODT World!") {
+		t.Errorf("Text = %q, want to contain 'Hello, ODT World!'", result.Text)
+	}
+}
+
+func TestIntegration_ODS(t *testing.T) {
+	data, err := os.ReadFile("../testdata/simple.ods")
+	if err != nil {
+		t.Fatalf("failed to read test file: %v", err)
+	}
+	result, err := Extract(context.Background(), bytes.NewReader(data), "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(result.Text, "Alice") {
+		t.Errorf("Text = %q, want to contain 'Alice'", result.Text)
+	}
+}
+
+func TestIntegration_ODP(t *testing.T) {
+	data, err := os.ReadFile("../testdata/simple.odp")
+	if err != nil {
+		t.Fatalf("failed to read test file: %v", err)
+	}
+	result, err := Extract(context.Background(), bytes.NewReader(data), "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(result.Text, "Welcome to the Presentation") {
+		t.Errorf("Text = %q, want to contain 'Welcome to the Presentation'", result.Text)
+	}
+}
+
 func TestIntegration_SupportedTypes(t *testing.T) {
 	reg := NewRegistry()
 	types := reg.SupportedTypes()

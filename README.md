@@ -11,7 +11,7 @@ built for commercial use with minimal dependencies and a small memory footprint.
 - Microsoft Office (DOCX, XLSX, PPTX)
 - Open Document Format (ODT, ODS, ODP)
 - PDF (text-layer extraction)
-- Images (JPEG, PNG, TIFF, BMP, GIF, WebP — EXIF/metadata extraction)
+- Images (JPEG, PNG, TIFF, BMP, GIF, WebP — EXIF/metadata + optional OCR text extraction + GeoTIFF support)
 - Audio (MP3, OGG, FLAC, WAV — ID3v2/Vorbis/RIFF metadata)
 - CAD (DXF — text entities, layers, and metadata)
 
@@ -21,7 +21,7 @@ built for commercial use with minimal dependencies and a small memory footprint.
 |---|---|---|
 | **Runtime** | Go 1.26+ | Browser-first (also Node.js) |
 | **Input** | `io.ReadSeeker` (streaming) | `Uint8Array` (buffered) |
-| **Runtime deps** | 2 (BSD) | 1 required (`fflate`, MIT), 1 optional peer (`pdfjs-dist`, Apache 2.0) |
+| **Runtime deps** | 2 (BSD) + 1 optional CGO (`gosseract`, MIT) | 1 required (`fflate`, MIT), 2 optional peers (`pdfjs-dist`, `tesseract.js`) |
 | **Bundle size** | N/A (compiled) | ~60 KB ESM / ~42 KB CJS (before gzip) |
 | **Cancellation** | `context.Context` | `AbortSignal` |
 
@@ -76,8 +76,10 @@ All extractors pass accuracy tests against rich test fixtures with known expecte
 | ODS | Cell values, multi-table | Title, creator | — | Pass |
 | ODP | Slide text (excludes notes) | Title, creator | — | Pass |
 | PDF | Text-layer extraction | Format detection | — | Pass |
-| JPEG | — | EXIF (dimensions, camera, GPS) | — | Pass |
-| PNG | — | tEXt chunks (title, author, etc.) | — | Pass |
+| JPEG | Optional OCR text | EXIF (dimensions, camera, GPS) | — | Pass |
+| PNG | Optional OCR text | tEXt chunks (title, author, etc.) | — | Pass |
+| TIFF/GeoTIFF | Optional OCR text | EXIF + GeoTIFF (CRS, bounds, pixel scale) | — | Pass |
+| BMP | Optional OCR text | Dimensions | — | Pass |
 | MP3 | Text summary | ID3v2 (title, artist, album, track, year, genre, album artist) | — | Pass |
 | OGG | Text summary | Vorbis comments (title, artist, album, track, date, genre) | — | Pass |
 | FLAC | Text summary | Vorbis comments (same as OGG) | — | Pass |
@@ -129,8 +131,9 @@ The TypeScript test suite asserts exact match on text, metadata, content type, a
 | ODS | Cell values, multi-table | Title, creator | 3 (simple, multisheet, empty) | Pass |
 | ODP | Slide text (excludes notes) | Title, creator | 3 (simple, multislide, empty) | Pass |
 | PDF | — | — | — | Requires `pdfjs-dist` peer dep |
-| JPEG | — | EXIF (dimensions, camera, GPS) | 1 (simple) | Pass |
-| PNG | — | tEXt chunks (title, author, etc.), dimensions | 2 (simple, text) | Pass |
+| JPEG | Optional OCR text | EXIF (dimensions, camera, GPS) | 3 (simple, ocr-text) | Pass |
+| PNG | Optional OCR text | tEXt chunks (title, author, etc.), dimensions | 4 (simple, text, ocr-text) | Pass |
+| TIFF/GeoTIFF | Optional OCR text | EXIF + GeoTIFF (CRS, bounds, pixel scale) | 1 (geotiff-sample) | Pass |
 | GIF | — | Dimensions | 1 (simple) | Pass |
 | MP3 | Text summary | ID3v2 (title, artist, album, track, year, genre, album artist) | 2 (simple, rich) | Pass |
 | OGG | Text summary | Vorbis comments (title, artist, album, track, date, genre) | 1 (simple) | Pass |
@@ -138,7 +141,7 @@ The TypeScript test suite asserts exact match on text, metadata, content type, a
 | WAV | Text summary | RIFF INFO + fmt (channels, sample rate, bits) | 1 (simple) | Pass |
 | DXF | TEXT, MTEXT, ATTRIB, INSERT, DIMENSION entities | Version, units, layers | 2 (simple, rich) | Pass |
 
-**Total: 34 parity tests passing, 37 golden files, 15 formats.**
+**Total: 37 parity tests passing, 40 golden files, 15 formats.**
 
 Run tests yourself: `cd ts && npx vitest run`
 
@@ -193,6 +196,64 @@ npm install pdfjs-dist
 ```
 
 If not installed, all other formats work fine — PDF extraction throws a clear error.
+
+### OCR Support (Optional)
+
+OCR enables text extraction from images (scanned documents, photos of signs, etc.).
+It is **opt-in** — disabled by default with zero overhead.
+
+**Go:**
+```bash
+# Install Tesseract
+brew install tesseract              # macOS
+apt install libtesseract-dev        # Debian/Ubuntu
+
+# Build with OCR enabled
+CGO_ENABLED=1 go build -tags ocr ./...
+
+# Run OCR tests
+CGO_ENABLED=1 go test -tags ocr ./formats/image/
+```
+
+```go
+import "github.com/dmorris/content-extractor/formats/image"
+
+// Create extractor with OCR enabled
+engine, err := image.NewOCREngine("eng")
+if err != nil { /* Tesseract not available */ }
+defer engine.Close()
+
+ext := &image.Extractor{OCR: engine, OCRLanguage: "eng"}
+result, err := ext.Extract(ctx, reader, "image/png")
+// result.Text contains OCR-recognized text
+// result.Metadata["ocr:confidence"] has confidence score
+```
+
+**TypeScript:**
+```bash
+npm install tesseract.js
+```
+
+```typescript
+import { ImageExtractor } from '@content-extractor/core';
+
+const ext = new ImageExtractor({ enableOCR: true, ocrLanguage: 'eng' });
+const result = await ext.extract(imageBytes, 'image/png');
+// result.text contains OCR-recognized text
+// result.metadata['ocr:confidence'] has confidence score
+```
+
+Without Tesseract (Go) or tesseract.js (TypeScript), image extraction returns metadata only — no error.
+
+### GeoTIFF Support
+
+GeoTIFF metadata is automatically extracted from TIFF files containing geospatial tags:
+
+- `geo:crs` — Coordinate Reference System (e.g., "WGS 84")
+- `geo:bounds` — Bounding box as "minX,minY,maxX,maxY"
+- `geo:pixel-scale` — Pixel dimensions as "scaleX,scaleY"
+
+No additional dependencies required — pure Go/TypeScript TIFF tag parsing.
 
 ### TypeScript Security Hardening
 

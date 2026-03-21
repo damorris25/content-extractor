@@ -1,0 +1,25 @@
+{
+  "text": "WGS 84\n-122.000000,36.996000,-121.996000,37.000000",
+  "metadata": {
+    "dc:format": [
+      "image/tiff"
+    ],
+    "exif:height": [
+      "4"
+    ],
+    "exif:width": [
+      "4"
+    ],
+    "geo:bounds": [
+      "-122.000000,36.996000,-121.996000,37.000000"
+    ],
+    "geo:crs": [
+      "WGS 84"
+    ],
+    "geo:pixel-scale": [
+      "0.001000,0.001000"
+    ]
+  },
+  "contentType": "image/tiff",
+  "language": ""
+}

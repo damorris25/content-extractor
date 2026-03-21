@@ -46,6 +46,8 @@ code reference sections of this file.
 - [ ] npm publish for `@content-extractor/core`
 - [ ] TypeScript browser-mode tests (Vitest browser environment)
 - [ ] Additional edge-case test coverage (both Go and TS)
+- [ ] OCR end-to-end testing with Tesseract installed (CI job with CGO + libtesseract)
+- [ ] OCR multi-language testing (beyond English)
 
 ## Known Issues & Blockers
 
@@ -95,6 +97,13 @@ _None yet._
 - [x] 2026-03-21: TypeScript port — browser-first, 34 golden file parity tests, 1 runtime dep (fflate)
 - [x] 2026-03-21: README updated with dual-language docs, parity metrics, TS usage examples
 - [x] 2026-03-21: GitHub repo created and pushed (damorris25/content-extractor, master + main)
+- [x] 2026-03-21: OCR text extraction from images (optional, both Go + TS):
+  - Go: `gosseract` (MIT, CGO) with build tags (`//go:build cgo && ocr`)
+  - TypeScript: `tesseract.js` (Apache 2.0) as optional peer dependency
+  - Graceful degradation — metadata-only extraction when OCR unavailable
+  - GeoTIFF metadata extraction (CRS, bounds, pixel scale) — pure Go/TS, no deps
+  - New test fixtures: geotiff-sample.tif, ocr-text.png, ocr-text.jpg
+  - 48 TypeScript tests (37 parity + 5 GeoTIFF + 6 OCR), 40 golden files
 - [x] 2026-03-21: TypeScript security hardening (9 fixes):
   - High: prototype pollution — `Object.create(null)` + key rejection for `__proto__`/`constructor`/`prototype`
   - Medium: ZIP bomb in detect.ts — replaced raw `unzipSync` with `safeUnzip`

@@ -55,6 +55,15 @@ cd ts && npx vitest run      # run all parity tests
 cd ts && npx tsc --noEmit    # type check without emitting
 ```
 
+### OCR (Optional — requires Tesseract)
+```bash
+# macOS: brew install tesseract
+# Linux: apt install libtesseract-dev
+CGO_ENABLED=1 go build -tags ocr ./...               # build with OCR
+CGO_ENABLED=1 go test -tags ocr ./formats/image/      # run OCR tests
+cd ts && npm install tesseract.js                      # TS OCR peer dep
+```
+
 ### Cross-Language Parity
 ```bash
 go run scripts/gen-golden-json.go   # regenerate golden files from Go
@@ -298,8 +307,10 @@ check `agents/subagent-prompts-index.md` for a matching template.
 
 ## Active Workstreams
 
-- **Complete** — Go implementation (139 tests, 15 formats, security-hardened)
-- **Complete** — TypeScript port (34 golden parity tests, browser-first)
+- **Complete** — Go implementation (139+ tests, 15 formats, security-hardened)
+- **Complete** — TypeScript port (48 tests including 37 golden parity, browser-first)
+- **Complete** — OCR text extraction (optional, both Go + TS via Tesseract)
+- **Complete** — GeoTIFF metadata extraction (CRS, bounds, pixel scale)
 - **P3** — PDF parity, npm publish, browser-mode tests (see TODO.md)
 
 ## Environment Variables

@@ -8,6 +8,7 @@ import {
   KEY_FORMAT, KEY_TITLE, KEY_CREATOR, KEY_DESCRIPTION, KEY_APPLICATION, KEY_DATE,
   normalizeDate,
 } from '../metadata.js';
+import { extractGeoTIFF } from './geotiff.js';
 
 const DEFAULT_MAX_IMAGE_SIZE = 100 * 1024 * 1024; // 100MB
 
@@ -41,11 +42,32 @@ const TAG_GPS_LAT = 0x0002;
 const TAG_GPS_LON_REF = 0x0003;
 const TAG_GPS_LON = 0x0004;
 
+/** Options for ImageExtractor. */
+export interface ImageExtractorOptions {
+  /** Maximum image file size in bytes (default 100MB). */
+  maxSize?: number;
+  /** Enable OCR text extraction. Requires tesseract.js peer dependency. */
+  enableOCR?: boolean;
+  /** Tesseract language code for OCR (default "eng"). */
+  ocrLanguage?: string;
+}
+
 export class ImageExtractor implements Extractor {
   maxSize: number;
+  enableOCR: boolean;
+  ocrLanguage: string;
 
-  constructor(maxSize?: number) {
-    this.maxSize = maxSize ?? DEFAULT_MAX_IMAGE_SIZE;
+  constructor(options?: ImageExtractorOptions | number) {
+    if (typeof options === 'number') {
+      // Backward-compatible: new ImageExtractor(maxSize)
+      this.maxSize = options;
+      this.enableOCR = false;
+      this.ocrLanguage = 'eng';
+    } else {
+      this.maxSize = options?.maxSize ?? DEFAULT_MAX_IMAGE_SIZE;
+      this.enableOCR = options?.enableOCR ?? false;
+      this.ocrLanguage = options?.ocrLanguage ?? 'eng';
+    }
   }
 
   supportedMIMETypes(): string[] {
@@ -88,7 +110,29 @@ export class ImageExtractor implements Extractor {
       extractPNGText(data, metadata);
     }
 
-    const text = buildTextSummary(metadata);
+    // Extract GeoTIFF metadata (TIFF only).
+    if (mime === 'image/tiff') {
+      extractGeoTIFF(data, metadata);
+    }
+
+    // Perform OCR if enabled.
+    let ocrText = '';
+    if (this.enableOCR) {
+      try {
+        const { recognizeImage } = await import('./ocr.js');
+        const result = await recognizeImage(data, this.ocrLanguage, options?.signal);
+        if (result.text) {
+          ocrText = result.text;
+          metadataSet(metadata, 'ocr:confidence', result.confidence.toFixed(1));
+          metadataSet(metadata, 'ocr:language', this.ocrLanguage);
+        }
+      } catch {
+        // OCR failure is non-fatal — fall through to metadata-only text.
+      }
+    }
+
+    // Use OCR text if available, otherwise build summary from metadata.
+    const text = ocrText || buildTextSummary(metadata);
 
     return { text, metadata, contentType: mime, language: '' };
   }
@@ -608,7 +652,7 @@ const textDecoder = new TextDecoder('utf-8');
 // ---------------------------------------------------------------------------
 
 function buildTextSummary(metadata: Record<string, string[]>): string {
-  const keys = [KEY_TITLE, KEY_DESCRIPTION, KEY_CREATOR, 'exif:make', 'exif:model'];
+  const keys = [KEY_TITLE, KEY_DESCRIPTION, KEY_CREATOR, 'exif:make', 'exif:model', 'geo:crs', 'geo:bounds'];
   const parts: string[] = [];
   for (const key of keys) {
     const v = metadataGet(metadata, key);

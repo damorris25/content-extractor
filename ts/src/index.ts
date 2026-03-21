@@ -16,7 +16,7 @@ export type { Metadata } from './metadata.js';
 export {
   metadataGet, metadataGetAll, metadataSet, metadataAdd, metadataHas,
   createMetadata, stripNUL, normalizeDate,
-  NS_DUBLIN_CORE, NS_OFFICE, NS_EXIF, NS_AUDIO, NS_CAD, NS_EXTRACTOR,
+  NS_DUBLIN_CORE, NS_OFFICE, NS_EXIF, NS_AUDIO, NS_CAD, NS_EXTRACTOR, NS_OCR, NS_GEO,
   KEY_TITLE, KEY_CREATOR, KEY_SUBJECT, KEY_DESCRIPTION, KEY_DATE,
   KEY_MODIFIED, KEY_LANGUAGE, KEY_FORMAT, KEY_PAGE_COUNT, KEY_WORD_COUNT,
   KEY_CHAR_COUNT, KEY_APPLICATION, KEY_REVISION,

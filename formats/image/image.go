@@ -32,11 +32,14 @@ var supportedMIMEs = map[string]bool{
 	"image/webp": true,
 }
 
-// Extractor extracts metadata from image files.
-// Text content is empty for images — all data is in Metadata.
-// Safe for concurrent use.
+// Extractor extracts metadata and optionally text (via OCR) from image files.
+// When OCR is nil (default), only metadata is extracted.
+// When OCR is set, text within images is recognized via Tesseract.
+// Safe for concurrent use when OCR is nil; with OCR, the engine serializes internally.
 type Extractor struct {
-	MaxSize int64
+	MaxSize     int64
+	OCR         *OCREngine // nil = no OCR (default). Set via NewOCREngine().
+	OCRLanguage string     // Tesseract language code (default "eng").
 }
 
 // New creates a new image metadata extractor.
@@ -99,8 +102,30 @@ func (e *Extractor) Extract(ctx context.Context, r io.Reader, mime string) (*ext
 		extractPNGText(data, result)
 	}
 
-	// Build a text summary from key metadata for searchability.
-	result.Text = buildTextSummary(result.Metadata)
+	// Extract GeoTIFF metadata (TIFF only).
+	if mime == "image/tiff" {
+		extractGeoTIFF(data, result.Metadata)
+	}
+
+	// Perform OCR if an engine is configured.
+	if e.OCR != nil {
+		ocrText, confidence, ocrErr := e.OCR.RecognizeBytes(ctx, data)
+		if ocrErr == nil && ocrText != "" {
+			lang := e.OCRLanguage
+			if lang == "" {
+				lang = "eng"
+			}
+			result.Text = ocrText
+			result.Metadata.Set("ocr:confidence", fmt.Sprintf("%.1f", confidence))
+			result.Metadata.Set("ocr:language", lang)
+		}
+		// On OCR failure, fall through to metadata-only text summary.
+	}
+
+	// Build a text summary from key metadata for searchability (fallback when no OCR text).
+	if result.Text == "" {
+		result.Text = buildTextSummary(result.Metadata)
+	}
 
 	return result, nil
 }
@@ -250,6 +275,8 @@ func buildTextSummary(m metadata.Metadata) string {
 		metadata.KeyCreator,
 		"exif:make",
 		"exif:model",
+		"geo:crs",
+		"geo:bounds",
 	} {
 		if v := m.Get(key); v != "" {
 			parts = append(parts, v)

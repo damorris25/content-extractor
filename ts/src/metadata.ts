@@ -11,6 +11,8 @@ export const NS_EXIF = 'exif';
 export const NS_AUDIO = 'audio';
 export const NS_CAD = 'cad';
 export const NS_EXTRACTOR = 'extractor';
+export const NS_OCR = 'ocr';
+export const NS_GEO = 'geo';
 
 // --- Well-known keys ---
 export const KEY_TITLE = 'dc:title';

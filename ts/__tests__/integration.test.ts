@@ -62,6 +62,9 @@ describe('Golden file parity — Images', () => {
   it('simple.png', () => assertGoldenMatch(registry, 'simple.png'));
   it('simple.gif', () => assertGoldenMatch(registry, 'simple.gif'));
   it('text.png', () => assertGoldenMatch(registry, 'text.png'));
+  it('geotiff-sample.tif', () => assertGoldenMatch(registry, 'geotiff-sample.tif'));
+  it('ocr-text.png', () => assertGoldenMatch(registry, 'ocr-text.png'));
+  it('ocr-text.jpg', () => assertGoldenMatch(registry, 'ocr-text.jpg'));
 });
 
 describe('Golden file parity — Audio', () => {

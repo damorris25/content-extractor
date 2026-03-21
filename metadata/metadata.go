@@ -16,6 +16,8 @@ const (
 	NSAudio      = "audio"     // Audio metadata: artist, album, track, duration
 	NSCAD        = "cad"       // CAD metadata: layers, units, version
 	NSExtractor  = "extractor" // Extraction process: duration, extractor-version, warnings
+	NSOCR        = "ocr"       // OCR metadata: confidence, language
+	NSGeo        = "geo"       // Geospatial metadata: CRS, bounds, pixel-scale
 )
 
 // Well-known metadata keys.

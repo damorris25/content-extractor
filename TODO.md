@@ -33,10 +33,11 @@ code reference sections of this file.
 - [x] Image metadata extraction (EXIF from JPEG/TIFF, basic PNG metadata)
 - [x] Audio metadata extraction (ID3v2 from MP3, Vorbis comments from OGG/FLAC, WAV RIFF INFO)
 - [x] CAD text extraction (DXF text entities — TEXT, MTEXT, ATTRIB, DIMENSION, INSERT)
-- [ ] Legacy Office formats (DOC, XLS, PPT — OLE2 compound document)
-- [ ] DWG support (binary CAD — may require third-party library)
+- [~] ~~Legacy Office formats (DOC, XLS, PPT)~~ — **won't do** (low demand, OLE2 complexity not justified)
+- [~] ~~DWG support~~ — **won't do** (proprietary format, no pure-Go parser, DXF covers the use case)
 - [ ] Benchmark suite for memory usage and throughput
 - [ ] License audit tooling (automated check of dependency licenses)
+- [ ] Quality test content for accuracy testing (real-world-like fixtures)
 - [ ] TypeScript/WASM bindings (future language expansion)
 
 ## Known Issues & Blockers
@@ -47,10 +48,7 @@ _None currently._
 
 ### Gotchas
 
-- **DWG format is proprietary** — No open-source pure-Go DWG parser exists.
-  May need to support DXF-only for CAD, or evaluate commercial-friendly C libraries with CGO.
-- **Legacy Office (DOC/XLS/PPT)** — OLE2 parsing is complex. Evaluate
-  existing Go libraries for license compatibility before implementing from scratch.
+_None currently._
 
 ### Workarounds In Place
 

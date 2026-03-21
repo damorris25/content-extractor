@@ -39,3 +39,4 @@ coverage.html
 # Node.js / TypeScript
 node_modules/
 ts/dist/
+*.traineddata

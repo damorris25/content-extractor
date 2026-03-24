@@ -205,7 +205,7 @@
   </div>
 
   <script type="module">
-    import { createRegistry, ImageExtractor } from '@content-extractor/core';
+    import { createRegistry } from '@content-extractor/core';
 
     // Configure pdfjs-dist worker for Vite.
     const setupReady = (async () => {
@@ -218,10 +218,8 @@
       }
     })();
 
-    // Create registry with OCR-enabled image extractor.
-    const registry = createRegistry();
-    // Re-register ImageExtractor with OCR enabled (overrides the default one).
-    registry.register(new ImageExtractor({ enableOCR: true }));
+    // Create registry with OCR enabled for image text extraction.
+    const registry = createRegistry({ enableOCR: true });
 
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');

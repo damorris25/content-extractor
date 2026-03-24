@@ -46,17 +46,28 @@ import { XMLExtractor } from './formats/xml.js';
 import { HTMLExtractor } from './formats/html.js';
 import { EMLExtractor } from './formats/email.js';
 
+/** Options for createRegistry(). */
+export interface CreateRegistryOptions {
+  /** Enable OCR for image extraction. Requires tesseract.js. */
+  enableOCR?: boolean;
+  /** Tesseract language code for OCR (default "eng"). */
+  ocrLanguage?: string;
+}
+
 /**
  * Create a registry pre-loaded with all built-in extractors and format detection.
  */
-export function createRegistry(): Registry {
+export function createRegistry(options?: CreateRegistryOptions): Registry {
   const r = new Registry();
   r.setDetector(new DefaultDetector());
   r.register(new TextExtractor());
   r.register(new XMLExtractor());
   r.register(new HTMLExtractor());
   r.register(new DxfExtractor());
-  r.register(new ImageExtractor());
+  r.register(new ImageExtractor({
+    enableOCR: options?.enableOCR ?? false,
+    ocrLanguage: options?.ocrLanguage ?? 'eng',
+  }));
   r.register(new AudioExtractor());
   r.register(new DocxExtractor());
   r.register(new XlsxExtractor());

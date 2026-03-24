@@ -161,7 +161,7 @@
 
   <div class="drop-zone" id="dropZone">
     <p><strong>Drop a file here</strong> or click to browse</p>
-    <p>Supports: DOCX, XLSX, PPTX, ODT, ODS, ODP, PDF, XML, HTML, images, audio, DXF, text</p>
+    <p>Supports: DOCX, XLSX, PPTX, ODT, ODS, ODP, PDF, XML, HTML, EML, images, audio, DXF, text</p>
     <input type="file" id="fileInput" />
   </div>
 
@@ -207,6 +207,18 @@
   <script type="module">
     import { extract } from '@content-extractor/core';
 
+    // Configure pdfjs-dist worker for Vite.
+    // This must happen before any PDF extraction call.
+    const pdfReady = (async () => {
+      try {
+        const pdfjs = await import('pdfjs-dist');
+        const workerModule = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
+        pdfjs.GlobalWorkerOptions.workerSrc = workerModule.default;
+      } catch {
+        // pdfjs-dist not available — PDF extraction will show a clear error.
+      }
+    })();
+
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const statusEl = document.getElementById('status');
@@ -236,6 +248,7 @@
       resultsEl.classList.remove('visible');
 
       try {
+        await pdfReady;
         const arrayBuf = await file.arrayBuffer();
         const data = new Uint8Array(arrayBuf);
 

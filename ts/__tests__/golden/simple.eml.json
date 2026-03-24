@@ -1,0 +1,22 @@
+{
+  "text": "This is a simple test email.\n\nIt has multiple paragraphs of plain text content\nfor testing the email extractor.",
+  "metadata": {
+    "dc:creator": [
+      "sender@example.com"
+    ],
+    "dc:date": [
+      "2024-01-01T12:00:00Z"
+    ],
+    "dc:format": [
+      "message/rfc822"
+    ],
+    "dc:title": [
+      "Test Email"
+    ],
+    "email:to": [
+      "recipient@example.com"
+    ]
+  },
+  "contentType": "message/rfc822",
+  "language": ""
+}

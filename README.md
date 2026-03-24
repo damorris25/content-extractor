@@ -11,6 +11,8 @@ built for commercial use with minimal dependencies and a small memory footprint.
 - Microsoft Office (DOCX, XLSX, PPTX)
 - Open Document Format (ODT, ODS, ODP)
 - PDF (text-layer extraction)
+- Web/Markup (XML, HTML — tag stripping with visible text extraction)
+- Email (EML — RFC 2822 with multipart MIME support)
 - Images (JPEG, PNG, TIFF, BMP, GIF, WebP — EXIF/metadata + optional OCR text extraction + GeoTIFF support)
 - Audio (MP3, OGG, FLAC, WAV — ID3v2/Vorbis/RIFF metadata)
 - CAD (DXF — text entities, layers, and metadata)
@@ -21,7 +23,7 @@ built for commercial use with minimal dependencies and a small memory footprint.
 |---|---|---|
 | **Runtime** | Go 1.26+ | Browser-first (also Node.js) |
 | **Input** | `io.ReadSeeker` (streaming) | `Uint8Array` (buffered) |
-| **Runtime deps** | 2 (BSD) + 1 optional CGO (`gosseract`, MIT) | 1 required (`fflate`, MIT), 2 optional peers (`pdfjs-dist`, `tesseract.js`) |
+| **Runtime deps** | 3 (BSD) + 1 optional CGO (`gosseract`, MIT) | 1 required (`fflate`, MIT), 2 optional peers (`pdfjs-dist`, `tesseract.js`) |
 | **Bundle size** | N/A (compiled) | ~60 KB ESM / ~42 KB CJS (before gzip) |
 | **Cancellation** | `context.Context` | `AbortSignal` |
 
@@ -53,6 +55,10 @@ Benchmarks run on Apple M5, Go 1.26.1. All times are per-operation on minimal te
 | FLAC (Vorbis) | 205 MB/s | 0.9 us | 47 | 2 KB |
 | WAV (RIFF) | 455 MB/s | 0.5 us | 23 | 1 KB |
 | DXF (CAD) | 266 MB/s | 1.7 us | 53 | 6 KB |
+| XML (tag stripping) | 52 MB/s | 8.5 us | — | — |
+| HTML (text extraction) | 102 MB/s | 4.3 us | — | — |
+| EML (simple) | 126 MB/s | 2.1 us | — | — |
+| EML (multipart) | 136 MB/s | 3.6 us | — | — |
 | GeoTIFF (metadata) | — | 4.5 us | 206 | 18 KB |
 | **OCR — PNG** | — | **12 ms** | 8 | 550 B |
 | **OCR — JPEG** | — | **13 ms** | 8 | 546 B |
@@ -92,6 +98,9 @@ All extractors pass accuracy tests against rich test fixtures with known expecte
 | FLAC | Text summary | Vorbis comments (same as OGG) | — | Pass |
 | WAV | Text summary | RIFF INFO + fmt (channels, sample rate, bits) | — | Pass |
 | DXF | TEXT, MTEXT, ATTRIB, INSERT, DIMENSION entities | Version, units, layers | — | Pass |
+| XML | CharData text content (tags stripped) | Format detection | — | Pass |
+| HTML | Visible text (skips script/style/noscript) | Title extraction | — | Pass |
+| EML | Plain text body (multipart: prefers text/plain) | Subject, From, To, Cc, Date | — | Pass |
 
 ### Go OCR Accuracy
 
@@ -132,6 +141,10 @@ All times are per-operation averages over 500 iterations after warmup.
 | WAV (RIFF) | 240 B | 1 us | 722,152 |
 | DXF (CAD) | 452 B | 3 us | 301,978 |
 | DXF (rich) | 723 B | 4 us | 241,560 |
+| XML | 459 B | 4 us | 273,585 |
+| HTML | 462 B | 5 us | 191,890 |
+| EML (simple) | 282 B | 3 us | 383,853 |
+| EML (multipart) | 515 B | 3 us | 295,574 |
 | **OCR — PNG** | 1.2 KB | **15 ms** | 67 |
 | **OCR — JPEG** | 1.5 KB | **16 ms** | 63 |
 
@@ -162,6 +175,9 @@ The TypeScript test suite asserts exact match on text, metadata, content type, a
 | FLAC | Text summary | Vorbis comments (same as OGG) | 1 (simple) | Pass |
 | WAV | Text summary | RIFF INFO + fmt (channels, sample rate, bits) | 1 (simple) | Pass |
 | DXF | TEXT, MTEXT, ATTRIB, INSERT, DIMENSION entities | Version, units, layers | 2 (simple, rich) | Pass |
+| XML | CharData text content (tags stripped) | Format detection | 1 (simple) | Pass |
+| HTML | Visible text (skips script/style/noscript) | Title extraction | 1 (simple) | Pass |
+| EML | Plain text body (multipart support) | Subject, From, To, Cc, Date | 2 (simple, multipart) | Pass |
 
 ### TypeScript OCR Accuracy
 
@@ -173,7 +189,7 @@ The TypeScript test suite asserts exact match on text, metadata, content type, a
 > TypeScript OCR uses tesseract.js (WebAssembly). Minor character-level differences from Go (gosseract/CGO)
 > are expected — this is why OCR tests are separate from golden file parity tests.
 
-**Total: 37 parity tests passing, 40 golden files, 15 formats + 6 OCR tests + 5 GeoTIFF tests.**
+**Total: 41 parity tests passing, 44 golden files, 18 formats + 6 OCR tests + 5 GeoTIFF tests.**
 
 Run tests yourself: `cd ts && npx vitest run`
 
@@ -184,9 +200,9 @@ Run tests yourself: `cd ts && npx vitest run`
 | Build time | 203 ms |
 | ESM bundle | 60 KB (15 KB gzipped) |
 | CJS bundle | 42 KB (13 KB gzipped) |
-| Source lines | ~4,200 |
+| Source lines | ~4,600 |
 | Runtime dependencies | 1 (`fflate`, MIT, ~13 KB gzipped) |
-| Test execution | 29 ms (48 tests) |
+| Test execution | 25 ms (53 tests) |
 
 ### TypeScript Quick Start
 
@@ -294,9 +310,10 @@ No additional dependencies required — pure Go/TypeScript TIFF tag parsing.
 | Prototype pollution | `Object.create(null)` metadata + key rejection |
 | ZIP bomb | Per-entry size limit (100 MB) + aggregate limit (500 MB) + entry count cap (10K) |
 | Integer overflow | IFD count validation, syncsafe bounds checks, DataView bounds checks |
-| XXE injection | DOCTYPE stripping before XML parsing (xmldom protection) |
+| XXE injection | DOCTYPE stripping before XML parsing (xmldom + XML extractor) |
 | Memory exhaustion | DXF generator-based line iteration, Latin-1 chunked decode |
 | Unbounded iteration | PDF page cap (10K), text entity cap (100K), layer cap (10K) |
+| Multipart recursion | EML nested multipart depth limit (10) + part count limit (100) |
 | NUL byte injection | All metadata values stripped of NUL bytes |
 
 ## Agent Cold Start
@@ -385,6 +402,8 @@ content-extractor/
 │   ├── office/         — Microsoft Office (OOXML + legacy)
 │   ├── odf/            — Open Document Format
 │   ├── pdf/            — PDF extraction
+│   ├── text/           — plain text, XML, HTML extraction
+│   ├── email/          — EML (RFC 2822) email extraction
 │   ├── image/          — image metadata extraction
 │   ├── audio/          — audio metadata extraction
 │   └── cad/            — CAD text/metadata extraction

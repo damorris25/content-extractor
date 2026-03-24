@@ -100,6 +100,7 @@ const extMap: Record<string, string> = {
   '.flac': 'audio/flac',
   '.dxf': 'image/vnd.dxf',
   '.dwg': 'image/vnd.dwg',
+  '.eml': 'message/rfc822',
 };
 
 /** Default format detector using magic bytes and extension fallback. */
@@ -217,7 +218,30 @@ function detectTextFormat(buf: Uint8Array): string | null {
     return 'text/html';
   }
 
+  // EML (RFC 2822): starts with common email headers.
+  if (looksLikeEML(s)) {
+    return 'message/rfc822';
+  }
+
   return null;
+}
+
+/** Check if text starts with RFC 2822 email headers. */
+function looksLikeEML(s: string): boolean {
+  const prefixes = [
+    'From: ',
+    'Return-Path: ',
+    'Received: ',
+    'MIME-Version: ',
+    'Message-ID: ',
+    'Message-Id: ',
+    'Date: ',
+    'Subject: ',
+  ];
+  for (const p of prefixes) {
+    if (s.startsWith(p)) return true;
+  }
+  return false;
 }
 
 function extensionToMIME(filename: string): string | null {

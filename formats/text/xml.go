@@ -3,6 +3,7 @@ package text
 
 import (
 	"context"
+	"bytes"
 	"encoding/xml"
 	"io"
 	"strings"
@@ -89,7 +90,7 @@ func (e *XMLExtractor) supportsXML(mime string) bool {
 
 // extractXMLText parses XML and returns concatenated CharData text.
 func extractXMLText(data []byte) string {
-	decoder := xml.NewDecoder(strings.NewReader(string(data)))
+	decoder := xml.NewDecoder(bytes.NewReader(data))
 	// Be lenient with encoding issues.
 	decoder.Strict = false
 	decoder.AutoClose = xml.HTMLAutoClose

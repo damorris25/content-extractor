@@ -2,6 +2,7 @@
 package text
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"strings"
@@ -95,7 +96,7 @@ func (e *HTMLExtractor) SupportedMIMETypes() []string {
 
 // extractHTMLText parses HTML and returns visible text content and the title.
 func extractHTMLText(data []byte) (text string, title string) {
-	doc, err := html.Parse(strings.NewReader(string(data)))
+	doc, err := html.Parse(bytes.NewReader(data))
 	if err != nil {
 		return "", ""
 	}

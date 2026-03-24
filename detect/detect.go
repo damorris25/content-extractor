@@ -219,7 +219,33 @@ func detectTextFormat(buf []byte) string {
 		return "text/html"
 	}
 
+	// EML (RFC 2822): starts with common email headers.
+	if looksLikeEML(s) {
+		return "message/rfc822"
+	}
+
 	return ""
+}
+
+// looksLikeEML checks if the text starts with RFC 2822 email headers.
+func looksLikeEML(s string) bool {
+	// Check for common first-line headers in email files.
+	prefixes := []string{
+		"From: ",
+		"Return-Path: ",
+		"Received: ",
+		"MIME-Version: ",
+		"Message-ID: ",
+		"Message-Id: ",
+		"Date: ",
+		"Subject: ",
+	}
+	for _, p := range prefixes {
+		if strings.HasPrefix(s, p) {
+			return true
+		}
+	}
+	return false
 }
 
 // DetectFunc allows using a function as an extractor.Detector.

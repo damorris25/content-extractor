@@ -50,4 +50,7 @@ var extMap = map[string]string{
 	// CAD
 	".dxf": "image/vnd.dxf",
 	".dwg": "image/vnd.dwg",
+
+	// Email
+	".eml": "message/rfc822",
 }

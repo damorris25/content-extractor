@@ -1,0 +1,11 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Test Email
+Date: Mon, 01 Jan 2024 12:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+
+This is a simple test email.
+
+It has multiple paragraphs of plain text content
+for testing the email extractor.

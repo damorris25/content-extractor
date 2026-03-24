@@ -16,10 +16,10 @@ export type { Metadata } from './metadata.js';
 export {
   metadataGet, metadataGetAll, metadataSet, metadataAdd, metadataHas,
   createMetadata, stripNUL, normalizeDate,
-  NS_DUBLIN_CORE, NS_OFFICE, NS_EXIF, NS_AUDIO, NS_CAD, NS_EXTRACTOR, NS_OCR, NS_GEO,
+  NS_DUBLIN_CORE, NS_OFFICE, NS_EXIF, NS_AUDIO, NS_CAD, NS_EXTRACTOR, NS_OCR, NS_GEO, NS_EMAIL,
   KEY_TITLE, KEY_CREATOR, KEY_SUBJECT, KEY_DESCRIPTION, KEY_DATE,
   KEY_MODIFIED, KEY_LANGUAGE, KEY_FORMAT, KEY_PAGE_COUNT, KEY_WORD_COUNT,
-  KEY_CHAR_COUNT, KEY_APPLICATION, KEY_REVISION,
+  KEY_CHAR_COUNT, KEY_APPLICATION, KEY_REVISION, KEY_EMAIL_TO, KEY_EMAIL_CC,
 } from './metadata.js';
 
 export type { Detector } from './detect.js';
@@ -42,6 +42,7 @@ import { OdpExtractor } from './formats/odp.js';
 import { PdfExtractor } from './formats/pdf.js';
 import { XMLExtractor } from './formats/xml.js';
 import { HTMLExtractor } from './formats/html.js';
+import { EMLExtractor } from './formats/email.js';
 
 /**
  * Create a registry pre-loaded with all built-in extractors and format detection.
@@ -62,6 +63,7 @@ export function createRegistry(): Registry {
   r.register(new OdsExtractor());
   r.register(new OdpExtractor());
   r.register(new PdfExtractor());
+  r.register(new EMLExtractor());
   return r;
 }
 

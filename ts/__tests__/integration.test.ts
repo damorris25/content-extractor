@@ -83,5 +83,10 @@ describe('Golden file parity — HTML', () => {
   it('simple.html', () => assertGoldenMatch(registry, 'simple.html'));
 });
 
+describe('Golden file parity — EML', () => {
+  it('simple.eml', () => assertGoldenMatch(registry, 'simple.eml'));
+  it('multipart.eml', () => assertGoldenMatch(registry, 'multipart.eml'));
+});
+
 // PDF tests skipped unless pdfjs-dist is installed.
 // describe('Golden file parity — PDF', () => { ... });

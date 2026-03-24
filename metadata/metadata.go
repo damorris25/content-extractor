@@ -18,6 +18,7 @@ const (
 	NSExtractor  = "extractor" // Extraction process: duration, extractor-version, warnings
 	NSOCR        = "ocr"       // OCR metadata: confidence, language
 	NSGeo        = "geo"       // Geospatial metadata: CRS, bounds, pixel-scale
+	NSEmail      = "email"     // Email metadata: to, cc, message-id
 )
 
 // Well-known metadata keys.
@@ -35,6 +36,8 @@ const (
 	KeyCharCount   = "office:char-count"
 	KeyApplication = "office:application"
 	KeyRevision    = "office:revision"
+	KeyEmailTo     = "email:to"
+	KeyEmailCc     = "email:cc"
 )
 
 // Get returns the first value for the given key, or empty string if not present.

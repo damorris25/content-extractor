@@ -13,6 +13,7 @@ export const NS_CAD = 'cad';
 export const NS_EXTRACTOR = 'extractor';
 export const NS_OCR = 'ocr';
 export const NS_GEO = 'geo';
+export const NS_EMAIL = 'email';
 
 // --- Well-known keys ---
 export const KEY_TITLE = 'dc:title';
@@ -28,6 +29,8 @@ export const KEY_WORD_COUNT = 'office:word-count';
 export const KEY_CHAR_COUNT = 'office:char-count';
 export const KEY_APPLICATION = 'office:application';
 export const KEY_REVISION = 'office:revision';
+export const KEY_EMAIL_TO = 'email:to';
+export const KEY_EMAIL_CC = 'email:cc';
 
 // --- Helper functions ---
 

@@ -1,0 +1,25 @@
+{
+  "text": "This is the plain text version of the email.\n\nBest regards,\nAlice",
+  "metadata": {
+    "dc:creator": [
+      "alice@example.com"
+    ],
+    "dc:date": [
+      "2024-02-15T09:30:00Z"
+    ],
+    "dc:format": [
+      "message/rfc822"
+    ],
+    "dc:title": [
+      "Multipart Test"
+    ],
+    "email:cc": [
+      "carol@example.com"
+    ],
+    "email:to": [
+      "bob@example.com"
+    ]
+  },
+  "contentType": "message/rfc822",
+  "language": ""
+}

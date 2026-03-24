@@ -79,6 +79,14 @@ function extractXMLText(xml: string): string {
       continue;
     }
 
+    // Skip DOCTYPE declarations (XXE defense-in-depth).
+    if (xml[i] === '<' && xml.startsWith('!DOCTYPE', i + 1)) {
+      const end = xml.indexOf('>', i + 9);
+      if (end < 0) break;
+      i = end + 1;
+      continue;
+    }
+
     // Skip CDATA — extract content
     if (xml[i] === '<' && xml.startsWith('![CDATA[', i + 1)) {
       const end = xml.indexOf(']]>', i + 9);

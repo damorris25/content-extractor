@@ -10,6 +10,7 @@ import (
 	"github.com/dmorris/content-extractor/extractor"
 	"github.com/dmorris/content-extractor/formats/audio"
 	"github.com/dmorris/content-extractor/formats/cad"
+	"github.com/dmorris/content-extractor/formats/email"
 	"github.com/dmorris/content-extractor/formats/image"
 	"github.com/dmorris/content-extractor/formats/odf"
 	"github.com/dmorris/content-extractor/formats/office"
@@ -29,6 +30,7 @@ func NewRegistry() *extractor.Registry {
 	image.Register(r)
 	audio.Register(r)
 	cad.Register(r)
+	email.Register(r)
 	return r
 }
 

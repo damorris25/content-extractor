@@ -81,6 +81,12 @@ func (d *Detector) Detect(r io.ReadSeeker, filename string) (string, error) {
 				return bmffMIME, nil
 			}
 			// Unknown ISOBMFF brand — fall through to extension/text detection.
+		} else if mime == "application/x-riff" {
+			// RIFF container — disambiguate by subtype at bytes 8-11.
+			if riffMIME := detectRIFF(buf); riffMIME != "" {
+				return riffMIME, nil
+			}
+			// Unknown RIFF subtype — fall through to extension/text detection.
 		} else {
 			return mime, nil
 		}
@@ -244,6 +250,22 @@ func detectISOBMFF(buf []byte) string {
 	}
 
 	return ""
+}
+
+// detectRIFF disambiguates RIFF-based formats by checking the subtype at bytes 8-11.
+func detectRIFF(buf []byte) string {
+	if len(buf) < 12 {
+		return ""
+	}
+	subtype := string(buf[8:12])
+	switch subtype {
+	case "WEBP":
+		return "image/webp"
+	case "WAVE":
+		return "audio/wav"
+	default:
+		return ""
+	}
 }
 
 // detectTextFormat checks if the buffer looks like a known text-based format.

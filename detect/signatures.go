@@ -32,9 +32,8 @@ var signatures = []MagicSignature{
 	// BMP
 	{MIME: "image/bmp", Offset: 0, Magic: []byte("BM")},
 
-	// WebP (RIFF....WEBP)
-	{MIME: "image/webp", Offset: 0, Magic: []byte("RIFF")},
-	// TRACKED-TASK: WebP detection should also check bytes 8-11 for "WEBP" - see TODO.md "Code Debt"
+	// RIFF container (WebP, WAV) — subtype detection done in detectRIFF().
+	{MIME: "application/x-riff", Offset: 0, Magic: []byte("RIFF")},
 
 	// GIF
 	{MIME: "image/gif", Offset: 0, Magic: []byte("GIF87a")},
@@ -51,10 +50,6 @@ var signatures = []MagicSignature{
 
 	// FLAC
 	{MIME: "audio/flac", Offset: 0, Magic: []byte("fLaC")},
-
-	// WAV (RIFF....WAVE)
-	{MIME: "audio/wav", Offset: 0, Magic: []byte("RIFF")},
-	// TRACKED-TASK: WAV/WebP disambiguation needs bytes 8-11 check - see TODO.md "Code Debt"
 
 	// OLE2 Compound Document (legacy DOC, XLS, PPT)
 	{MIME: "application/x-ole2", Offset: 0, Magic: []byte{0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1}},

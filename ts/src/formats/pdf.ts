@@ -57,26 +57,33 @@ export class PdfExtractor implements Extractor {
     checkAborted(options?.signal);
 
     // Dynamic import of pdfjs-dist — it is an optional peer dependency.
-    // The string literal (not a variable) is required for bundlers like Vite
-    // to resolve the module. The @ts-ignore suppresses the missing-types error
-    // since pdfjs-dist is an optional peer dep (not in devDependencies).
+    // In Node.js environments, pdfjs-dist v4+ requires the legacy build.
+    // In browsers, the standard build works directly.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let pdfjsLib: any;
     try {
       // @ts-ignore — optional peer dependency
-      pdfjsLib = await import('pdfjs-dist');
+      pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
     } catch {
-      throw new Error(
-        'pdfjs-dist is required for PDF extraction. Install it: npm install pdfjs-dist',
-      );
+      try {
+        // @ts-ignore — optional peer dependency (browser or older versions)
+        pdfjsLib = await import('pdfjs-dist');
+      } catch {
+        throw new Error(
+          'pdfjs-dist is required for PDF extraction. Install it: npm install pdfjs-dist',
+        );
+      }
     }
 
     // Configure the PDF.js worker (once per runtime).
-    // In browser environments, pdfjs-dist needs a worker to avoid blocking the
-    // main thread. The caller can set GlobalWorkerOptions.workerSrc before
-    // calling extract (recommended). If not set, we skip — pdfjs-dist will
-    // fall back to running on the main thread.
+    // In Node.js, disable the worker to avoid worker file resolution issues.
+    // In browsers, the caller can set GlobalWorkerOptions.workerSrc before
+    // calling extract; if not set, pdfjs-dist runs on the main thread.
     if (!workerConfigured && pdfjsLib.GlobalWorkerOptions) {
+      if (typeof globalThis.window === 'undefined') {
+        // Node.js environment — disable worker by setting workerPort to null.
+        pdfjsLib.GlobalWorkerOptions.workerPort = null;
+      }
       workerConfigured = true;
     }
 

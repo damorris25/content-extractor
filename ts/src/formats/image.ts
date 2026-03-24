@@ -111,7 +111,7 @@ export class ImageExtractor implements Extractor {
     // Format-specific metadata extraction.
     if (mime === 'image/heic' || mime === 'image/heif' || mime === 'image/avif') {
       // ISOBMFF container — dimensions from ispe, EXIF from embedded item.
-      // TRACKED-TASK: OCR not supported for HEIC/AVIF (Tesseract can't decode) - see TODO.md
+      // OCR not supported for HEIC/AVIF (no decoder available; Tesseract can't decode natively).
       const { extractISOBMFF } = await import('./isobmff.js');
       extractISOBMFF(data, metadata);
     } else {

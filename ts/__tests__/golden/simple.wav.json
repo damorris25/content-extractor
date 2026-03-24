@@ -1,10 +1,31 @@
 {
-  "text": "",
+  "text": "WAV Test Song\nWAV Test Artist\nWAV Test Album\nJazz",
   "metadata": {
+    "audio:album": [
+      "WAV Test Album"
+    ],
+    "audio:bits-per-sample": [
+      "16"
+    ],
+    "audio:channels": [
+      "2"
+    ],
+    "audio:genre": [
+      "Jazz"
+    ],
+    "audio:sample-rate": [
+      "44100"
+    ],
+    "dc:creator": [
+      "WAV Test Artist"
+    ],
     "dc:format": [
-      "image/webp"
+      "audio/wav"
+    ],
+    "dc:title": [
+      "WAV Test Song"
     ]
   },
-  "contentType": "image/webp",
+  "contentType": "audio/wav",
   "language": ""
 }

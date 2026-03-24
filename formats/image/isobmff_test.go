@@ -409,3 +409,416 @@ func TestExtractISOBMFF_MetaTooSmall(t *testing.T) {
 	extractISOBMFF(metaBox, result)
 	// Should not panic.
 }
+
+// --- extractISOBMFFExif edge-case tests ---
+
+// buildIINF constructs an iinf FullBox containing infe entries.
+// version controls the iinf box version (0 = 2-byte count, 1+ = 4-byte count).
+func buildIINF(version byte, infes [][]byte) []byte {
+	var payload []byte
+	if version == 0 {
+		// 2-byte entry count
+		cnt := make([]byte, 2)
+		binary.BigEndian.PutUint16(cnt, uint16(len(infes)))
+		payload = append(payload, cnt...)
+	} else {
+		// 4-byte entry count
+		cnt := make([]byte, 4)
+		binary.BigEndian.PutUint32(cnt, uint32(len(infes)))
+		payload = append(payload, cnt...)
+	}
+	for _, infe := range infes {
+		payload = append(payload, infe...)
+	}
+	return makeFullBox("iinf", version, payload)
+}
+
+// buildINFE constructs an infe FullBox.
+// version controls the infe version.
+// itemID is the item ID, itemType is the 4-byte item type (e.g. "Exif").
+func buildINFE(version byte, itemID uint16, itemType string) []byte {
+	var payload []byte
+	if version >= 2 {
+		// item_ID (2 bytes), item_protection_index (2 bytes), item_type (4 bytes)
+		id := make([]byte, 2)
+		binary.BigEndian.PutUint16(id, itemID)
+		payload = append(payload, id...)
+		payload = append(payload, 0x00, 0x00) // item_protection_index
+		payload = append(payload, []byte(itemType)...)
+	} else {
+		// v0/v1: item_ID (2 bytes), item_protection_index (2 bytes) — no item_type
+		id := make([]byte, 2)
+		binary.BigEndian.PutUint16(id, itemID)
+		payload = append(payload, id...)
+		payload = append(payload, 0x00, 0x00)
+	}
+	return makeFullBox("infe", version, payload)
+}
+
+// buildILOC constructs an iloc FullBox (version 0) with given items.
+// offsetSize and lengthSize control the variable-size fields (2 or 4).
+func buildILOC(version byte, offsetSize, lengthSize, baseOffsetSize int, items []ilocItem) []byte {
+	var payload []byte
+	// sizes byte: (offsetSize << 4) | lengthSize
+	payload = append(payload, byte(offsetSize<<4)|byte(lengthSize))
+	// (baseOffsetSize << 4) | indexSize (0 for v0)
+	indexSize := 0
+	if version == 1 || version == 2 {
+		indexSize = 0 // we use 0 for simplicity
+	}
+	payload = append(payload, byte(baseOffsetSize<<4)|byte(indexSize))
+
+	// item count
+	if version < 2 {
+		cnt := make([]byte, 2)
+		binary.BigEndian.PutUint16(cnt, uint16(len(items)))
+		payload = append(payload, cnt...)
+	} else {
+		cnt := make([]byte, 4)
+		binary.BigEndian.PutUint32(cnt, uint32(len(items)))
+		payload = append(payload, cnt...)
+	}
+
+	for _, item := range items {
+		// item_ID
+		if version < 2 {
+			id := make([]byte, 2)
+			binary.BigEndian.PutUint16(id, item.itemID)
+			payload = append(payload, id...)
+		} else {
+			id := make([]byte, 4)
+			binary.BigEndian.PutUint32(id, uint32(item.itemID))
+			payload = append(payload, id...)
+		}
+
+		// construction_method (v1/v2 only)
+		if version == 1 || version == 2 {
+			payload = append(payload, 0x00, 0x00)
+		}
+
+		// data_reference_index
+		payload = append(payload, 0x00, 0x00)
+
+		// base_offset (variable size)
+		switch baseOffsetSize {
+		case 2:
+			payload = append(payload, 0x00, 0x00)
+		case 4:
+			payload = append(payload, 0x00, 0x00, 0x00, 0x00)
+		}
+
+		// extent_count = 1
+		payload = append(payload, 0x00, 0x01)
+
+		// extent_offset
+		switch offsetSize {
+		case 2:
+			off := make([]byte, 2)
+			binary.BigEndian.PutUint16(off, uint16(item.offset))
+			payload = append(payload, off...)
+		case 4:
+			off := make([]byte, 4)
+			binary.BigEndian.PutUint32(off, uint32(item.offset))
+			payload = append(payload, off...)
+		}
+
+		// extent_length
+		switch lengthSize {
+		case 2:
+			ln := make([]byte, 2)
+			binary.BigEndian.PutUint16(ln, uint16(item.size))
+			payload = append(payload, ln...)
+		case 4:
+			ln := make([]byte, 4)
+			binary.BigEndian.PutUint32(ln, uint32(item.size))
+			payload = append(payload, ln...)
+		}
+	}
+
+	return makeFullBox("iloc", version, payload)
+}
+
+// buildMinimalExifBlob builds a minimal EXIF blob with the 4-byte TIFF offset prefix.
+// tiffOffset is the offset from byte 4 to the TIFF header start.
+// tiffHeader is the raw TIFF header bytes (e.g. MM\x00\x2a...).
+func buildMinimalExifBlob(tiffOffset uint32, tiffHeader []byte) []byte {
+	prefix := make([]byte, 4)
+	binary.BigEndian.PutUint32(prefix, tiffOffset)
+	padding := make([]byte, tiffOffset) // padding between prefix and TIFF header
+	var blob []byte
+	blob = append(blob, prefix...)
+	blob = append(blob, padding...)
+	blob = append(blob, tiffHeader...)
+	return blob
+}
+
+func TestExtractISOBMFFExif_ValidExifItem(t *testing.T) {
+	// Build a synthetic ISOBMFF structure: meta > { iinf > infe(Exif, id=1), iloc(item 1 -> EXIF blob) }
+	// The EXIF blob has a 4-byte TIFF offset prefix + valid minimal TIFF header.
+
+	// Minimal TIFF header: MM (big-endian), magic 42, IFD offset 8, 0 entries
+	tiffHeader := []byte{
+		'M', 'M', 0x00, 0x2A, // byte order + magic
+		0x00, 0x00, 0x00, 0x08, // IFD0 offset = 8
+		0x00, 0x00, // 0 IFD entries
+	}
+	// EXIF blob: 4-byte prefix (tiffOffset=6) + 6 bytes padding + TIFF header
+	exifBlob := buildMinimalExifBlob(6, tiffHeader)
+
+	infe := buildINFE(2, 1, "Exif")
+	iinf := buildIINF(0, [][]byte{infe})
+
+	// We'll place the EXIF blob at a known offset in the final data buffer.
+	// First build iinf and iloc as meta children, then append the EXIF blob after.
+	// The iloc must point to the absolute offset of the EXIF blob in the final buffer.
+
+	// Build iloc pointing to a placeholder offset (we'll fix it after assembling).
+	ilocItems := []ilocItem{{itemID: 1, offset: 0, size: len(exifBlob)}}
+	iloc := buildILOC(0, 4, 4, 0, ilocItems)
+
+	// Assemble: meta FullBox wrapping iinf + iloc, then exif blob appended at end.
+	metaPayload := append([]byte{0, 0, 0, 0}, iinf...) // 4 bytes version/flags
+	metaPayload = append(metaPayload, iloc...)
+
+	metaBox := makeBox("meta", metaPayload)
+	// EXIF blob offset is right after the meta box.
+	exifOffset := len(metaBox)
+
+	// Now fix the iloc to point to the correct offset.
+	// Reassemble with correct offset.
+	ilocItems[0].offset = exifOffset
+	iloc = buildILOC(0, 4, 4, 0, ilocItems)
+
+	metaPayload = append([]byte{0, 0, 0, 0}, iinf...)
+	metaPayload = append(metaPayload, iloc...)
+	metaBox = makeBox("meta", metaPayload)
+	// Recalculate since meta box size may have changed (it shouldn't, same iloc size).
+	exifOffset = len(metaBox)
+	ilocItems[0].offset = exifOffset
+	iloc = buildILOC(0, 4, 4, 0, ilocItems)
+	metaPayload = append([]byte{0, 0, 0, 0}, iinf...)
+	metaPayload = append(metaPayload, iloc...)
+	metaBox = makeBox("meta", metaPayload)
+
+	fullData := append(metaBox, exifBlob...)
+
+	result := &extractor.Result{Metadata: make(metadata.Metadata)}
+	extractISOBMFF(fullData, result)
+
+	// The minimal TIFF has 0 IFD entries, so goexif won't extract metadata,
+	// but the code path through extractISOBMFFExif should be fully exercised
+	// without panic. No EXIF metadata expected from an empty IFD.
+	// The key test is that extractISOBMFFExif runs through the full code path.
+}
+
+func TestFindExifItemID_InfeVersionLessThan2(t *testing.T) {
+	// infe with version < 2 should be skipped (no item_type field).
+	infe := buildINFE(0, 1, "Exif") // version 0 — no item_type parsed
+	iinf := buildIINF(0, [][]byte{infe})
+	allData := iinf
+	children := walkBoxes(allData, 0, len(allData))
+
+	id := findExifItemID(allData, children)
+	if id != 0 {
+		t.Errorf("findExifItemID with infe v0 = %d, want 0", id)
+	}
+}
+
+func TestFindExifItemID_MultipleInfes(t *testing.T) {
+	// Two infe entries: one non-Exif (v2, "hvc1") and one Exif (v2, "Exif").
+	infe1 := buildINFE(2, 1, "hvc1")
+	infe2 := buildINFE(2, 2, "Exif")
+	iinf := buildIINF(0, [][]byte{infe1, infe2})
+	allData := iinf
+	children := walkBoxes(allData, 0, len(allData))
+
+	id := findExifItemID(allData, children)
+	if id != 2 {
+		t.Errorf("findExifItemID = %d, want 2", id)
+	}
+}
+
+func TestFindExifItemID_IinfVersion1(t *testing.T) {
+	// iinf version 1 uses 4-byte entry count.
+	infe := buildINFE(2, 5, "Exif")
+	iinf := buildIINF(1, [][]byte{infe})
+	allData := iinf
+	children := walkBoxes(allData, 0, len(allData))
+
+	id := findExifItemID(allData, children)
+	if id != 5 {
+		t.Errorf("findExifItemID with iinf v1 = %d, want 5", id)
+	}
+}
+
+func TestParseILOC_Version1_ConstructionMethod(t *testing.T) {
+	// iloc version 1 has a 2-byte construction_method field per item.
+	ilocItems := []ilocItem{{itemID: 7, offset: 200, size: 80}}
+	iloc := buildILOC(1, 4, 4, 0, ilocItems)
+	allData := iloc
+	children := walkBoxes(allData, 0, len(allData))
+
+	items := parseILOC(allData, children)
+	if items == nil {
+		t.Fatal("parseILOC v1 returned nil")
+	}
+	item, ok := items[7]
+	if !ok {
+		t.Fatal("item 7 not found in iloc v1")
+	}
+	if item.offset != 200 {
+		t.Errorf("item.offset = %d, want 200", item.offset)
+	}
+	if item.size != 80 {
+		t.Errorf("item.size = %d, want 80", item.size)
+	}
+}
+
+func TestParseILOC_Version2(t *testing.T) {
+	// iloc version 2 has 4-byte item IDs and 4-byte item count.
+	ilocItems := []ilocItem{{itemID: 3, offset: 500, size: 100}}
+	iloc := buildILOC(2, 4, 4, 0, ilocItems)
+	allData := iloc
+	children := walkBoxes(allData, 0, len(allData))
+
+	items := parseILOC(allData, children)
+	if items == nil {
+		t.Fatal("parseILOC v2 returned nil")
+	}
+	item, ok := items[3]
+	if !ok {
+		t.Fatal("item 3 not found in iloc v2")
+	}
+	if item.offset != 500 {
+		t.Errorf("item.offset = %d, want 500", item.offset)
+	}
+	if item.size != 100 {
+		t.Errorf("item.size = %d, want 100", item.size)
+	}
+}
+
+func TestExtractISOBMFFExif_ExifBlobTooSmall(t *testing.T) {
+	// EXIF item exists but blob is < 10 bytes — should be skipped.
+	infe := buildINFE(2, 1, "Exif")
+	iinf := buildIINF(0, [][]byte{infe})
+
+	// Build a tiny EXIF blob (5 bytes < 10 minimum).
+	exifBlob := []byte{0, 0, 0, 0, 0}
+
+	ilocItems := []ilocItem{{itemID: 1, offset: 0, size: len(exifBlob)}}
+	iloc := buildILOC(0, 4, 4, 0, ilocItems)
+
+	metaPayload := append([]byte{0, 0, 0, 0}, iinf...)
+	metaPayload = append(metaPayload, iloc...)
+	metaBox := makeBox("meta", metaPayload)
+
+	// Fix iloc offset to point after meta box.
+	exifOffset := len(metaBox)
+	ilocItems[0].offset = exifOffset
+	iloc = buildILOC(0, 4, 4, 0, ilocItems)
+	metaPayload = append([]byte{0, 0, 0, 0}, iinf...)
+	metaPayload = append(metaPayload, iloc...)
+	metaBox = makeBox("meta", metaPayload)
+	exifOffset = len(metaBox)
+	ilocItems[0].offset = exifOffset
+	iloc = buildILOC(0, 4, 4, 0, ilocItems)
+	metaPayload = append([]byte{0, 0, 0, 0}, iinf...)
+	metaPayload = append(metaPayload, iloc...)
+	metaBox = makeBox("meta", metaPayload)
+
+	fullData := append(metaBox, exifBlob...)
+
+	result := &extractor.Result{Metadata: make(metadata.Metadata)}
+	extractISOBMFF(fullData, result)
+
+	// Should not panic; no EXIF metadata extracted.
+	if got := result.Metadata.Get("exif:make"); got != "" {
+		t.Errorf("exif:make = %q, want empty (blob too small)", got)
+	}
+}
+
+func TestExtractISOBMFFExif_TiffOffsetPastEnd(t *testing.T) {
+	// EXIF blob with tiffOffset pointing past the end of the blob.
+	infe := buildINFE(2, 1, "Exif")
+	iinf := buildIINF(0, [][]byte{infe})
+
+	// EXIF blob: 4-byte prefix with tiffOffset=100 (way past 16-byte blob)
+	exifBlob := make([]byte, 16)
+	binary.BigEndian.PutUint32(exifBlob[:4], 100) // tiffOffset=100
+
+	ilocItems := []ilocItem{{itemID: 1, offset: 0, size: len(exifBlob)}}
+	iloc := buildILOC(0, 4, 4, 0, ilocItems)
+
+	metaPayload := append([]byte{0, 0, 0, 0}, iinf...)
+	metaPayload = append(metaPayload, iloc...)
+	metaBox := makeBox("meta", metaPayload)
+
+	exifOffset := len(metaBox)
+	ilocItems[0].offset = exifOffset
+	iloc = buildILOC(0, 4, 4, 0, ilocItems)
+	metaPayload = append([]byte{0, 0, 0, 0}, iinf...)
+	metaPayload = append(metaPayload, iloc...)
+	metaBox = makeBox("meta", metaPayload)
+	exifOffset = len(metaBox)
+	ilocItems[0].offset = exifOffset
+	iloc = buildILOC(0, 4, 4, 0, ilocItems)
+	metaPayload = append([]byte{0, 0, 0, 0}, iinf...)
+	metaPayload = append(metaPayload, iloc...)
+	metaBox = makeBox("meta", metaPayload)
+
+	fullData := append(metaBox, exifBlob...)
+
+	result := &extractor.Result{Metadata: make(metadata.Metadata)}
+	extractISOBMFF(fullData, result)
+
+	// Should not panic; goexif.Decode will fail on garbage data.
+	if got := result.Metadata.Get("exif:make"); got != "" {
+		t.Errorf("exif:make = %q, want empty (tiffOffset past end)", got)
+	}
+}
+
+func TestExtractISOBMFFExif_ItemNotInILOC(t *testing.T) {
+	// iinf has Exif item ID=1, but iloc has no entry for item 1.
+	infe := buildINFE(2, 1, "Exif")
+	iinf := buildIINF(0, [][]byte{infe})
+
+	// iloc with a different item (id=99)
+	ilocItems := []ilocItem{{itemID: 99, offset: 0, size: 50}}
+	iloc := buildILOC(0, 4, 4, 0, ilocItems)
+
+	metaPayload := append([]byte{0, 0, 0, 0}, iinf...)
+	metaPayload = append(metaPayload, iloc...)
+
+	allData := metaPayload
+	// Walk as if these are metaChildren (skipping 4-byte version/flags of meta).
+	children := walkBoxes(allData, 4, len(allData))
+
+	result := &extractor.Result{Metadata: make(metadata.Metadata)}
+	extractISOBMFFExif(allData, children, result)
+
+	if got := result.Metadata.Get("exif:make"); got != "" {
+		t.Errorf("exif:make = %q, want empty (item not in iloc)", got)
+	}
+}
+
+func TestExtractISOBMFFExif_ItemOffsetOutOfBounds(t *testing.T) {
+	// iloc entry points past end of data.
+	infe := buildINFE(2, 1, "Exif")
+	iinf := buildIINF(0, [][]byte{infe})
+
+	ilocItems := []ilocItem{{itemID: 1, offset: 99999, size: 50}}
+	iloc := buildILOC(0, 4, 4, 0, ilocItems)
+
+	metaPayload := append([]byte{0, 0, 0, 0}, iinf...)
+	metaPayload = append(metaPayload, iloc...)
+
+	allData := metaPayload
+	children := walkBoxes(allData, 4, len(allData))
+
+	result := &extractor.Result{Metadata: make(metadata.Metadata)}
+	extractISOBMFFExif(allData, children, result)
+
+	if got := result.Metadata.Get("exif:make"); got != "" {
+		t.Errorf("exif:make = %q, want empty (offset out of bounds)", got)
+	}
+}

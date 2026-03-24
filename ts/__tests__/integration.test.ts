@@ -117,5 +117,8 @@ describe('Golden file parity — HEIC/AVIF', () => {
   it('simple.avif', () => assertGoldenMatch(registry, 'simple.avif'));
 });
 
-// PDF tests skipped unless pdfjs-dist is installed.
-// describe('Golden file parity — PDF', () => { ... });
+describe('Golden file parity — PDF', () => {
+  it('simple.pdf', () => assertGoldenMatch(registry, 'simple.pdf'));
+  it('multipage.pdf', () => assertGoldenMatch(registry, 'multipage.pdf'));
+  it('empty.pdf', () => assertGoldenMatch(registry, 'empty.pdf'));
+});

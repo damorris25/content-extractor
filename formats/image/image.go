@@ -97,7 +97,7 @@ func (e *Extractor) Extract(ctx context.Context, r io.Reader, mime string) (*ext
 	switch mime {
 	case "image/heic", "image/heif", "image/avif":
 		// ISOBMFF container — dimensions from ispe, EXIF from embedded item.
-		// TRACKED-TASK: OCR not supported for HEIC/AVIF (Tesseract/Leptonica can't decode) - see TODO.md
+		// OCR not supported for HEIC/AVIF (no pure-Go decoder; Tesseract/Leptonica can't decode).
 		extractISOBMFF(data, result)
 	default:
 		// Extract image dimensions via stdlib.

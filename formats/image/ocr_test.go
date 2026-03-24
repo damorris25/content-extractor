@@ -6,6 +6,7 @@ package image
 import (
 	"bytes"
 	"context"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
@@ -102,5 +103,38 @@ func TestOCR_IntegrationWithExtractor(t *testing.T) {
 	}
 	if result.Metadata.Get("ocr:language") != "eng" {
 		t.Errorf("ocr:language = %q, want 'eng'", result.Metadata.Get("ocr:language"))
+	}
+}
+
+// TestOCR_MultiLanguage_German tests OCR with German text.
+// Skipped if deu.traineddata is not installed.
+func TestOCR_MultiLanguage_German(t *testing.T) {
+	// Check if German language pack is available.
+	out, err := exec.Command("tesseract", "--list-langs").CombinedOutput()
+	if err != nil {
+		t.Skip("tesseract not available")
+	}
+	if !strings.Contains(string(out), "deu") {
+		t.Skip("deu.traineddata not installed — install with: brew install tesseract-lang")
+	}
+
+	engine, err := NewOCREngine("deu")
+	if err != nil {
+		t.Fatalf("NewOCREngine(deu) failed: %v", err)
+	}
+	defer engine.Close()
+
+	data := loadTestFile(t, "ocr-german.png")
+	text, confidence, err := engine.RecognizeBytes(context.Background(), data)
+	if err != nil {
+		t.Fatalf("RecognizeBytes failed: %v", err)
+	}
+
+	t.Logf("German OCR: text=%q, confidence=%.1f", text, confidence)
+
+	// The image contains "Hallo Welt" — should find at least part of it.
+	normalized := strings.ToLower(text)
+	if !strings.Contains(normalized, "hallo") && !strings.Contains(normalized, "welt") {
+		t.Errorf("OCR text = %q, expected to contain 'Hallo' or 'Welt'", text)
 	}
 }

@@ -120,6 +120,37 @@ func TestDXF_UnsupportedMIME(t *testing.T) {
 	}
 }
 
+func TestDxfUnitName(t *testing.T) {
+	tests := []struct {
+		code string
+		want string
+	}{
+		{"0", "Unitless"},
+		{"1", "Inches"},
+		{"2", "Feet"},
+		{"3", "Miles"},
+		{"4", "Millimeters"},
+		{"5", "Centimeters"},
+		{"6", "Meters"},
+		{"7", "Kilometers"},
+		// Unknown codes should be returned as-is.
+		{"8", "8"},
+		{"9", "9"},
+		{"10", "10"},
+		{"99", "99"},
+		{"", ""},
+		{"abc", "abc"},
+	}
+	for _, tt := range tests {
+		t.Run("code_"+tt.code, func(t *testing.T) {
+			got := dxfUnitName(tt.code)
+			if got != tt.want {
+				t.Errorf("dxfUnitName(%q) = %q, want %q", tt.code, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestDXF_CleanMTEXT(t *testing.T) {
 	tests := []struct {
 		input string

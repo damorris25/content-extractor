@@ -34,8 +34,8 @@ const signatures: MagicSignature[] = [
   { mime: 'image/tiff', offset: 0, magic: new Uint8Array([0x4d, 0x4d, 0x00, 0x2a]) },
   // BMP
   { mime: 'image/bmp', offset: 0, magic: new Uint8Array([0x42, 0x4d]) }, // BM
-  // WebP (RIFF)
-  { mime: 'image/webp', offset: 0, magic: new Uint8Array([0x52, 0x49, 0x46, 0x46]) }, // RIFF
+  // RIFF container (WebP, WAV) — subtype detection done in detectRIFF().
+  { mime: 'application/x-riff', offset: 0, magic: new Uint8Array([0x52, 0x49, 0x46, 0x46]) }, // RIFF
   // GIF87a
   { mime: 'image/gif', offset: 0, magic: new Uint8Array([0x47, 0x49, 0x46, 0x38, 0x37, 0x61]) },
   // GIF89a
@@ -48,8 +48,6 @@ const signatures: MagicSignature[] = [
   { mime: 'audio/ogg', offset: 0, magic: new Uint8Array([0x4f, 0x67, 0x67, 0x53]) }, // OggS
   // FLAC
   { mime: 'audio/flac', offset: 0, magic: new Uint8Array([0x66, 0x4c, 0x61, 0x43]) }, // fLaC
-  // WAV (RIFF)
-  { mime: 'audio/wav', offset: 0, magic: new Uint8Array([0x52, 0x49, 0x46, 0x46]) }, // RIFF
   // OLE2 (legacy Office)
   { mime: 'application/x-ole2', offset: 0, magic: new Uint8Array([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]) },
   // DWG
@@ -137,6 +135,11 @@ export class DefaultDetector implements Detector {
         const bmffMIME = detectISOBMFF(buf);
         if (bmffMIME) return bmffMIME;
         // Unknown ISOBMFF brand — fall through to text/extension detection.
+      } else if (mime === 'application/x-riff') {
+        // RIFF container — disambiguate by subtype at bytes 8-11.
+        const riffMIME = detectRIFF(buf);
+        if (riffMIME) return riffMIME;
+        // Unknown RIFF subtype — fall through to text/extension detection.
       } else {
         return mime;
       }
@@ -254,6 +257,20 @@ function detectISOBMFF(buf: Uint8Array): string | null {
   }
 
   return null;
+}
+
+/** Disambiguate RIFF-based formats by checking bytes 8-11 for the subtype. */
+function detectRIFF(buf: Uint8Array): string | null {
+  if (buf.length < 12) return null;
+  const subtype = String.fromCharCode(buf[8]!, buf[9]!, buf[10]!, buf[11]!);
+  switch (subtype) {
+    case 'WEBP':
+      return 'image/webp';
+    case 'WAVE':
+      return 'audio/wav';
+    default:
+      return null;
+  }
 }
 
 function detectTextFormat(buf: Uint8Array): string | null {

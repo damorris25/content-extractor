@@ -490,3 +490,71 @@ func TestDetect_MP3SyncWord(t *testing.T) {
 		t.Errorf("Detect(MP3 sync) = %q, want audio/mpeg", got)
 	}
 }
+
+// --- RIFF disambiguation tests ---
+
+func TestDetect_RIFF_WebP(t *testing.T) {
+	// Minimal RIFF/WEBP header: "RIFF" + 4 bytes size + "WEBP"
+	header := []byte("RIFF\x00\x00\x00\x00WEBP")
+	r := bytes.NewReader(header)
+	d := NewDetector()
+	got, err := d.Detect(r, "")
+	if err != nil {
+		t.Fatalf("Detect error: %v", err)
+	}
+	if got != "image/webp" {
+		t.Errorf("Detect(RIFF/WEBP) = %q, want image/webp", got)
+	}
+}
+
+func TestDetect_RIFF_WAV(t *testing.T) {
+	// Minimal RIFF/WAVE header: "RIFF" + 4 bytes size + "WAVE"
+	header := []byte("RIFF\x00\x00\x00\x00WAVE")
+	r := bytes.NewReader(header)
+	d := NewDetector()
+	got, err := d.Detect(r, "")
+	if err != nil {
+		t.Fatalf("Detect error: %v", err)
+	}
+	if got != "audio/wav" {
+		t.Errorf("Detect(RIFF/WAVE) = %q, want audio/wav", got)
+	}
+}
+
+func TestDetect_RIFF_WAV_RealFile(t *testing.T) {
+	f, err := os.Open(filepath.Join("..", "testdata", "simple.wav"))
+	if err != nil {
+		t.Skipf("testdata/simple.wav not found: %v", err)
+	}
+	defer f.Close()
+	d := NewDetector()
+	got, err := d.Detect(f, "simple.wav")
+	if err != nil {
+		t.Fatalf("Detect error: %v", err)
+	}
+	if got != "audio/wav" {
+		t.Errorf("Detect(simple.wav) = %q, want audio/wav", got)
+	}
+}
+
+func TestDetect_RIFF_Unknown(t *testing.T) {
+	// Unknown RIFF subtype should fall through to extension.
+	header := []byte("RIFF\x00\x00\x00\x00AVI ")
+	r := bytes.NewReader(header)
+	d := NewDetector()
+	_, err := d.Detect(r, "")
+	if err == nil {
+		t.Error("expected detection to fail for unknown RIFF subtype without extension")
+	}
+}
+
+func TestDetect_RIFF_TooShort(t *testing.T) {
+	// RIFF header but less than 12 bytes — subtype unreadable.
+	header := []byte("RIFF\x00\x00\x00\x00")
+	r := bytes.NewReader(header)
+	d := NewDetector()
+	_, err := d.Detect(r, "")
+	if err == nil {
+		t.Error("expected detection to fail for truncated RIFF")
+	}
+}

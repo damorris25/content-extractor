@@ -109,4 +109,19 @@ describe('OCR text extraction', () => {
     await expect(ext.extract(data, 'image/png', { signal: controller.signal }))
       .rejects.toThrow();
   });
+
+  it('recognizes German text with deu language', async () => {
+    if (!hasTesseract) return;
+
+    const data = new Uint8Array(readFileSync(join(TESTDATA, 'ocr-german.png')));
+    const ext = new ImageExtractor({ enableOCR: true, ocrLanguage: 'deu' });
+
+    // tesseract.js downloads language data on-demand, so this may take longer.
+    const result = await ext.extract(data, 'image/png');
+
+    // The image contains "Hallo Welt" — check metadata is set.
+    expect(metadataGet(result.metadata, 'ocr:language')).toBe('deu');
+    // Text output may vary, but OCR should produce something.
+    expect(result.text.length).toBeGreaterThan(0);
+  });
 });

@@ -166,7 +166,13 @@ func extractDimensions(data []byte, result *extractor.Result) {
 }
 
 // extractEXIF parses EXIF data from JPEG/TIFF files.
+// Uses panic recovery because goexif may panic on malformed input.
 func extractEXIF(data []byte, result *extractor.Result) {
+	defer func() {
+		if r := recover(); r != nil {
+			// Malformed EXIF — silently ignore, same as parse error.
+		}
+	}()
 	x, err := goexif.Decode(bytes.NewReader(data))
 	if err != nil {
 		return // No EXIF data is not an error.

@@ -166,7 +166,13 @@ type ilocItem struct {
 
 // extractISOBMFFExif finds the EXIF item via iinf/infe, locates it via iloc,
 // and extracts EXIF metadata using goexif.
+// Uses panic recovery because goexif may panic on malformed input.
 func extractISOBMFFExif(data []byte, metaChildren []isobmffBox, result *extractor.Result) {
+	defer func() {
+		if r := recover(); r != nil {
+			// Malformed EXIF in ISOBMFF — silently ignore.
+		}
+	}()
 	// Find EXIF item ID from iinf box.
 	exifItemID := findExifItemID(data, metaChildren)
 	if exifItemID == 0 {

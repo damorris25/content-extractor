@@ -127,6 +127,9 @@ func loadSharedStrings(ctx context.Context, zr *zip.Reader) ([]string, error) {
 	inSI := false
 	inT := false
 
+	// Cap shared string count to prevent memory exhaustion from crafted files.
+	const maxSharedStrings = 1_000_000
+
 	for {
 		if err := ctx.Err(); err != nil {
 			return strings, err
@@ -156,6 +159,9 @@ func loadSharedStrings(ctx context.Context, zr *zip.Reader) ([]string, error) {
 			case "si":
 				inSI = false
 				strings = append(strings, current.String())
+				if len(strings) >= maxSharedStrings {
+					return strings, nil
+				}
 			case "t":
 				inT = false
 			}

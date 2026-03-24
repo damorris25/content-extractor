@@ -152,3 +152,145 @@ func TestImage_TextSummary(t *testing.T) {
 		t.Error("Text summary is empty, expected metadata summary")
 	}
 }
+
+// --- Contract error path tests ---
+
+func TestImage_DefaultMaxSize(t *testing.T) {
+	ext := &Extractor{MaxSize: 0}
+	if got := ext.maxSize(); got != DefaultMaxImageSize {
+		t.Errorf("maxSize() = %d, want %d", got, DefaultMaxImageSize)
+	}
+}
+
+func TestImage_CustomMaxSize(t *testing.T) {
+	ext := &Extractor{MaxSize: 1024}
+	if got := ext.maxSize(); got != 1024 {
+		t.Errorf("maxSize() = %d, want 1024", got)
+	}
+}
+
+func TestImage_FileTooLarge(t *testing.T) {
+	ext := &Extractor{MaxSize: 10}
+	data := make([]byte, 20) // larger than MaxSize
+	// Give it a valid JPEG header so it doesn't fail on MIME check.
+	copy(data, []byte{0xFF, 0xD8, 0xFF, 0xE0})
+	_, err := ext.Extract(context.Background(), bytes.NewReader(data), "image/jpeg")
+	if err != extractor.ErrFileTooLarge {
+		t.Errorf("error = %v, want ErrFileTooLarge", err)
+	}
+}
+
+func TestImage_ContextCancelled(t *testing.T) {
+	ext := New()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err := ext.Extract(ctx, bytes.NewReader([]byte{0xFF, 0xD8}), "image/jpeg")
+	if err != context.Canceled {
+		t.Errorf("error = %v, want context.Canceled", err)
+	}
+}
+
+// --- cleanTag tests ---
+
+func TestCleanTag(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{`"quoted"`, "quoted"},
+		{"  spaces  ", "spaces"},
+		{`"with quotes"`, "with quotes"},
+		{"unquoted", "unquoted"},
+		{`""`, ""},
+		{"", ""},
+	}
+	for _, tt := range tests {
+		got := cleanTag(tt.input)
+		if got != tt.want {
+			t.Errorf("cleanTag(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
+// --- PNG text chunk edge cases ---
+
+func TestImage_PNG_ChunkOverflow(t *testing.T) {
+	// Build a minimal PNG with a tEXt chunk that claims more bytes than available.
+	var buf []byte
+	// PNG signature
+	buf = append(buf, 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n')
+	// tEXt chunk with size 0xFFFF (larger than remaining data)
+	buf = append(buf, 0x00, 0x00, 0xFF, 0xFF) // chunk length (65535)
+	buf = append(buf, 't', 'E', 'X', 't')     // chunk type
+	buf = append(buf, make([]byte, 20)...)     // only 20 bytes of payload (not 65535)
+	buf = append(buf, 0, 0, 0, 0)             // CRC
+
+	result := &extractor.Result{Metadata: make(metadata.Metadata)}
+	extractPNGText(buf, result)
+	// Should not panic — overflow chunk should be skipped.
+}
+
+func TestImage_PNG_WellKnownKeys(t *testing.T) {
+	// Build a PNG with tEXt chunks for all well-known keys.
+	var buf []byte
+	// PNG signature
+	buf = append(buf, 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n')
+
+	// Helper: append a tEXt chunk.
+	addText := func(key, val string) {
+		payload := append([]byte(key), 0)
+		payload = append(payload, []byte(val)...)
+		size := len(payload)
+		buf = append(buf, byte(size>>24), byte(size>>16), byte(size>>8), byte(size))
+		buf = append(buf, 't', 'E', 'X', 't')
+		buf = append(buf, payload...)
+		buf = append(buf, 0, 0, 0, 0) // CRC (ignored for extraction)
+	}
+
+	addText("Title", "My Image")
+	addText("Author", "Test Author")
+	addText("Description", "A test image")
+	addText("Software", "TestGen")
+
+	result := &extractor.Result{Metadata: make(metadata.Metadata)}
+	extractPNGText(buf, result)
+
+	checks := []struct {
+		key  string
+		want string
+	}{
+		{metadata.KeyTitle, "My Image"},
+		{metadata.KeyCreator, "Test Author"},
+		{metadata.KeyDescription, "A test image"},
+		{metadata.KeyApplication, "TestGen"},
+		{"png:title", "My Image"},
+		{"png:author", "Test Author"},
+		{"png:description", "A test image"},
+		{"png:software", "TestGen"},
+	}
+	for _, c := range checks {
+		if got := result.Metadata.Get(c.key); got != c.want {
+			t.Errorf("Metadata[%q] = %q, want %q", c.key, got, c.want)
+		}
+	}
+}
+
+// --- buildTextSummary ---
+
+func TestBuildTextSummary_Empty(t *testing.T) {
+	m := make(metadata.Metadata)
+	got := buildTextSummary(m)
+	if got != "" {
+		t.Errorf("buildTextSummary(empty) = %q, want empty", got)
+	}
+}
+
+func TestBuildTextSummary_WithData(t *testing.T) {
+	m := make(metadata.Metadata)
+	m.Set(metadata.KeyTitle, "Test Image")
+	m.Set("exif:make", "Canon")
+	got := buildTextSummary(m)
+	if got == "" {
+		t.Error("buildTextSummary should not be empty")
+	}
+}

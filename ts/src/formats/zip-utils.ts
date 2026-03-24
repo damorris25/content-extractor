@@ -38,8 +38,13 @@ export function safeUnzip(data: Uint8Array, maxSize: number): ZipEntries {
     );
   }
 
-  // Check entry count and aggregate decompressed size.
+  // Sanitize entries into a null-prototype object to prevent prototype pollution.
+  // fflate's unzipSync returns a plain object — a crafted ZIP with an entry named
+  // "__proto__" could inject properties onto Object.prototype.
+  const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+  const safe: ZipEntries = Object.create(null) as ZipEntries;
   const names = Object.keys(entries);
+
   if (names.length > MAX_ZIP_ENTRIES) {
     throw new CorruptInputError(
       `ZIP contains too many entries: ${names.length} > ${MAX_ZIP_ENTRIES}`,
@@ -48,6 +53,7 @@ export function safeUnzip(data: Uint8Array, maxSize: number): ZipEntries {
 
   let totalSize = 0;
   for (const name of names) {
+    if (DANGEROUS_KEYS.has(name)) continue; // Skip dangerous entry names.
     const entry = entries[name];
     if (entry) {
       totalSize += entry.byteLength;
@@ -56,10 +62,11 @@ export function safeUnzip(data: Uint8Array, maxSize: number): ZipEntries {
           `ZIP total decompressed size exceeds ${MAX_TOTAL_DECOMPRESSED_SIZE} bytes`,
         );
       }
+      safe[name] = entry;
     }
   }
 
-  return entries;
+  return safe;
 }
 
 /** Read a named entry from a ZIP as a UTF-8 string. */

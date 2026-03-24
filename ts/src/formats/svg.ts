@@ -84,6 +84,7 @@ function extractSVGContent(svg: string): SVGInfo {
     inDesc: boolean;
   }
 
+  const MAX_STACK_DEPTH = 1000; // Prevent memory exhaustion from deeply nested SVG.
   const stack: Frame[] = [];
   let inText = false;
   let inTitle = false;
@@ -178,7 +179,9 @@ function extractSVGContent(svg: string): SVGInfo {
             currentBuf = '';
           }
 
-          stack.push(frame);
+          if (stack.length < MAX_STACK_DEPTH) {
+            stack.push(frame);
+          }
         }
       }
       continue;

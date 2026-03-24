@@ -19,6 +19,9 @@ const (
 
 	// DefaultMaxPDFSize is the maximum size for a PDF file.
 	DefaultMaxPDFSize = 100 * 1024 * 1024 // 100MB
+
+	// maxPages caps page iteration to prevent DoS from PDFs claiming millions of pages.
+	maxPages = 10000
 )
 
 // Extractor extracts text content and metadata from PDF files.
@@ -102,6 +105,9 @@ func (e *Extractor) extractPDF(ctx context.Context, data []byte) (result *extrac
 	// Extract text from all pages.
 	var b strings.Builder
 	numPages := pdfReader.NumPage()
+	if numPages > maxPages {
+		numPages = maxPages
+	}
 
 	if numPages > 0 {
 		result.Metadata.Set(metadata.KeyPageCount, fmt.Sprintf("%d", numPages))

@@ -61,4 +61,8 @@ var signatures = []MagicSignature{
 
 	// DWG
 	{MIME: "image/vnd.dwg", Offset: 0, Magic: []byte("AC10")},
+
+	// ISOBMFF container (HEIC, HEIF, AVIF) — ftyp box type at offset 4.
+	// Brand-specific detection is done in detectISOBMFF().
+	{MIME: "application/x-isobmff", Offset: 4, Magic: []byte("ftyp")},
 }

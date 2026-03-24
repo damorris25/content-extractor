@@ -12,6 +12,14 @@ import { extractGeoTIFF } from './geotiff.js';
 
 const DEFAULT_MAX_IMAGE_SIZE = 100 * 1024 * 1024; // 100MB
 
+/**
+ * Maximum pixel dimension (width or height) for OCR input. Images larger than
+ * this are downscaled before recognition — improves both speed and accuracy.
+ * Tesseract works best at 150-300 DPI; a 2048px limit keeps most documents in
+ * that range while making large camera photos tractable.
+ */
+const OCR_MAX_DIMENSION = 2048;
+
 const SUPPORTED_MIMES = new Set([
   'image/jpeg',
   'image/png',
@@ -19,6 +27,9 @@ const SUPPORTED_MIMES = new Set([
   'image/bmp',
   'image/gif',
   'image/webp',
+  'image/heic',
+  'image/heif',
+  'image/avif',
 ]);
 
 /** EXIF tag IDs. */
@@ -97,22 +108,30 @@ export class ImageExtractor implements Extractor {
 
     checkAborted(options?.signal);
 
-    // Extract dimensions based on format.
-    extractDimensions(data, mime, metadata);
+    // Format-specific metadata extraction.
+    if (mime === 'image/heic' || mime === 'image/heif' || mime === 'image/avif') {
+      // ISOBMFF container — dimensions from ispe, EXIF from embedded item.
+      // TRACKED-TASK: OCR not supported for HEIC/AVIF (Tesseract can't decode) - see TODO.md
+      const { extractISOBMFF } = await import('./isobmff.js');
+      extractISOBMFF(data, metadata);
+    } else {
+      // Extract dimensions based on format.
+      extractDimensions(data, mime, metadata);
 
-    // Extract EXIF metadata (JPEG and TIFF only).
-    if (mime === 'image/jpeg' || mime === 'image/tiff') {
-      extractEXIF(data, mime, metadata);
-    }
+      // Extract EXIF metadata (JPEG and TIFF only).
+      if (mime === 'image/jpeg' || mime === 'image/tiff') {
+        extractEXIF(data, mime, metadata);
+      }
 
-    // Extract PNG text chunks.
-    if (mime === 'image/png') {
-      extractPNGText(data, metadata);
-    }
+      // Extract PNG text chunks.
+      if (mime === 'image/png') {
+        extractPNGText(data, metadata);
+      }
 
-    // Extract GeoTIFF metadata (TIFF only).
-    if (mime === 'image/tiff') {
-      extractGeoTIFF(data, metadata);
+      // Extract GeoTIFF metadata (TIFF only).
+      if (mime === 'image/tiff') {
+        extractGeoTIFF(data, metadata);
+      }
     }
 
     // Perform OCR if enabled.
@@ -120,7 +139,9 @@ export class ImageExtractor implements Extractor {
     if (this.enableOCR) {
       try {
         const { recognizeImage } = await import('./ocr.js');
-        const result = await recognizeImage(data, this.ocrLanguage, options?.signal);
+        // Downscale large images before OCR for speed and accuracy.
+        const ocrInput = await prepareForOCR(data, mime, metadata);
+        const result = await recognizeImage(ocrInput, this.ocrLanguage, options?.signal);
         if (result.text) {
           ocrText = result.text;
           metadataSet(metadata, 'ocr:confidence', result.confidence.toFixed(1));
@@ -284,7 +305,7 @@ function findAPP1(data: Uint8Array): number {
 }
 
 /** Parse a TIFF/EXIF block starting with the TIFF header (II or MM). */
-function parseExifBlock(
+export function parseExifBlock(
   tiffData: Uint8Array,
   metadata: Record<string, string[]>,
 ): void {
@@ -646,6 +667,58 @@ function extractPNGText(
 }
 
 const textDecoder = new TextDecoder('utf-8');
+
+// ---------------------------------------------------------------------------
+// OCR image preprocessing
+// ---------------------------------------------------------------------------
+
+/**
+ * Downscale an image before OCR if it exceeds OCR_MAX_DIMENSION on either axis.
+ * Uses createImageBitmap + OffscreenCanvas (browser) or canvas (Node).
+ * Falls back to raw bytes if no Canvas API is available.
+ */
+async function prepareForOCR(
+  data: Uint8Array,
+  mime: string,
+  metadata: Record<string, string[]>,
+): Promise<Uint8Array | any> {
+  // Read dimensions from already-extracted metadata to decide if downscaling is needed.
+  const w = parseInt(metadataGet(metadata, 'exif:width') || '0', 10);
+  const h = parseInt(metadataGet(metadata, 'exif:height') || '0', 10);
+
+  if (w <= OCR_MAX_DIMENSION && h <= OCR_MAX_DIMENSION) {
+    return data; // Already small enough.
+  }
+
+  // Try browser APIs (createImageBitmap + OffscreenCanvas).
+  if (typeof createImageBitmap === 'function' && typeof OffscreenCanvas === 'function') {
+    try {
+      const blob = new Blob([data as BlobPart], { type: mime });
+      const bitmap = await createImageBitmap(blob);
+
+      const scale = Math.min(OCR_MAX_DIMENSION / bitmap.width, OCR_MAX_DIMENSION / bitmap.height, 1);
+      const newW = Math.round(bitmap.width * scale);
+      const newH = Math.round(bitmap.height * scale);
+
+      const canvas = new OffscreenCanvas(newW, newH);
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(bitmap, 0, 0, newW, newH);
+        bitmap.close();
+        // Export as PNG for lossless handoff to Tesseract.
+        const outBlob = await canvas.convertToBlob({ type: 'image/png' });
+        return new Uint8Array(await outBlob.arrayBuffer());
+      }
+      bitmap.close();
+    } catch {
+      // Fall through to raw data.
+    }
+  }
+
+  // No Canvas API available (Node.js without canvas package) — pass raw bytes.
+  // Tesseract will decode and process the full-resolution image.
+  return data;
+}
 
 // ---------------------------------------------------------------------------
 // Text summary

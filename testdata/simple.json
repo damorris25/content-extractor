@@ -1,0 +1,9 @@
+{
+  "name": "content-extractor",
+  "version": "1.0.0",
+  "features": ["text", "metadata", "detection"],
+  "nested": {
+    "key": "value",
+    "count": 42
+  }
+}

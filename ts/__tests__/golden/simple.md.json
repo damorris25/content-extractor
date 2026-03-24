@@ -1,0 +1,10 @@
+{
+  "text": "# Content Extractor\n\nA library for extracting text from files.\n\n## Features\n\n- Text extraction\n- Metadata parsing\n- Format detection\n\n## Usage\n\nImport the library and call `extract()`.\n",
+  "metadata": {
+    "dc:format": [
+      "text/markdown"
+    ]
+  },
+  "contentType": "text/markdown",
+  "language": ""
+}

@@ -1,0 +1,10 @@
+{
+  "text": "Times New Roman;\n;;\n\nHello, this is a simple RTF document.\n\nIt has multiple paragraphs.\n\nSpecial characters: � (e-acute) and — (em-dash).",
+  "metadata": {
+    "dc:format": [
+      "application/rtf"
+    ]
+  },
+  "contentType": "application/rtf",
+  "language": ""
+}

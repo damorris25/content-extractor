@@ -88,5 +88,34 @@ describe('Golden file parity — EML', () => {
   it('multipart.eml', () => assertGoldenMatch(registry, 'multipart.eml'));
 });
 
+describe('Golden file parity — JSON', () => {
+  it('simple.json', () => assertGoldenMatch(registry, 'simple.json'));
+});
+
+describe('Golden file parity — CSV', () => {
+  it('simple.csv', () => assertGoldenMatch(registry, 'simple.csv', 'text/csv'));
+});
+
+describe('Golden file parity — YAML', () => {
+  it('simple.yaml', () => assertGoldenMatch(registry, 'simple.yaml', 'application/x-yaml'));
+});
+
+describe('Golden file parity — Markdown', () => {
+  it('simple.md', () => assertGoldenMatch(registry, 'simple.md', 'text/markdown'));
+});
+
+describe('Golden file parity — SVG', () => {
+  it('simple.svg', () => assertGoldenMatch(registry, 'simple.svg'));
+});
+
+describe('Golden file parity — RTF', () => {
+  it('simple.rtf', () => assertGoldenMatch(registry, 'simple.rtf'));
+});
+
+describe('Golden file parity — HEIC/AVIF', () => {
+  it('simple.heic', () => assertGoldenMatch(registry, 'simple.heic'));
+  it('simple.avif', () => assertGoldenMatch(registry, 'simple.avif'));
+});
+
 // PDF tests skipped unless pdfjs-dist is installed.
 // describe('Golden file parity — PDF', () => { ... });

@@ -28,6 +28,29 @@ func TestDetect_MagicBytes(t *testing.T) {
 		{"ID3", []byte("ID3rest"), "audio/mpeg"},
 		{"OLE2", []byte{0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1, 0x00}, "application/x-ole2"},
 		{"DWG", []byte("AC1032rest"), "image/vnd.dwg"},
+		// ISOBMFF: ftyp at offset 4 with known brands.
+		{"HEIC", func() []byte {
+			// ftyp box: [size=20][ftyp][heic][0000]
+			b := make([]byte, 20)
+			b[0], b[1], b[2], b[3] = 0, 0, 0, 20
+			copy(b[4:], "ftyp")
+			copy(b[8:], "heic")
+			return b
+		}(), "image/heic"},
+		{"AVIF", func() []byte {
+			b := make([]byte, 20)
+			b[0], b[1], b[2], b[3] = 0, 0, 0, 20
+			copy(b[4:], "ftyp")
+			copy(b[8:], "avif")
+			return b
+		}(), "image/avif"},
+		{"HEIF_mif1", func() []byte {
+			b := make([]byte, 20)
+			b[0], b[1], b[2], b[3] = 0, 0, 0, 20
+			copy(b[4:], "ftyp")
+			copy(b[8:], "mif1")
+			return b
+		}(), "image/heif"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -54,6 +77,9 @@ func TestDetect_ExtensionFallback(t *testing.T) {
 		{"photo.jpg", "image/jpeg"},
 		{"song.mp3", "audio/mpeg"},
 		{"drawing.dxf", "image/vnd.dxf"},
+		{"photo.heic", "image/heic"},
+		{"photo.heif", "image/heif"},
+		{"photo.avif", "image/avif"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.filename, func(t *testing.T) {

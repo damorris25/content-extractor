@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/dmorris/content-extractor/contentextractor"
+	"github.com/dmorris/content-extractor/detect"
 )
 
 // goldenResult mirrors extractor.Result for JSON serialization with sorted metadata.
@@ -60,7 +61,24 @@ func main() {
 		}
 
 		r := bytes.NewReader(data)
-		result, err := registry.Extract(ctx, r, "")
+
+		// Detect MIME type with filename hint for formats that lack magic bytes
+		// (CSV, YAML, Markdown, etc.).
+		detector := detect.NewDetector()
+		mime, err := detector.Detect(r, name)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "SKIP %s: detection error: %v\n", name, err)
+			skipped++
+			continue
+		}
+		// Seek back to start after detection.
+		if _, err := r.Seek(0, 0); err != nil {
+			fmt.Fprintf(os.Stderr, "SKIP %s: seek error: %v\n", name, err)
+			skipped++
+			continue
+		}
+
+		result, err := registry.Extract(ctx, r, mime)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "SKIP %s: extraction error: %v\n", name, err)
 			skipped++

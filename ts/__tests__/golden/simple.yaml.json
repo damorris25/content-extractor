@@ -1,0 +1,10 @@
+{
+  "text": "name: content-extractor\nversion: 1.0.0\ndescription: A text extraction library\nfeatures:\n  - text\n  - metadata\n  - detection\nsettings:\n  maxBytes: 10485760\n  streaming: true\n",
+  "metadata": {
+    "dc:format": [
+      "application/x-yaml"
+    ]
+  },
+  "contentType": "application/x-yaml",
+  "language": ""
+}

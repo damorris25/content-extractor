@@ -75,7 +75,15 @@ func (d *Detector) Detect(r io.ReadSeeker, filename string) (string, error) {
 				return zipMIME, nil
 			}
 		}
-		return mime, nil
+		// ISOBMFF-based formats need brand inspection.
+		if mime == "application/x-isobmff" {
+			if bmffMIME := detectISOBMFF(buf); bmffMIME != "" {
+				return bmffMIME, nil
+			}
+			// Unknown ISOBMFF brand — fall through to extension/text detection.
+		} else {
+			return mime, nil
+		}
 	}
 
 	// Check for text-based formats that don't have magic bytes.
@@ -196,6 +204,48 @@ func readZIPEntry(zr *zip.Reader, name string) string {
 	return ""
 }
 
+// isobmffBrands maps ISOBMFF major/compatible brands to MIME types.
+var isobmffBrands = map[string]string{
+	"heic": "image/heic",
+	"heix": "image/heic",
+	"heim": "image/heic",
+	"heis": "image/heic",
+	"mif1": "image/heif",
+	"msf1": "image/heif",
+	"avif": "image/avif",
+	"avis": "image/avif",
+}
+
+// detectISOBMFF reads the ftyp box to determine the specific ISOBMFF format.
+// The ftyp box layout: [4B size][4B "ftyp"][4B major_brand][4B minor_version][4B compatible_brands...]
+func detectISOBMFF(buf []byte) string {
+	if len(buf) < 12 {
+		return ""
+	}
+
+	// Read box size (big-endian uint32).
+	boxSize := int(buf[0])<<24 | int(buf[1])<<16 | int(buf[2])<<8 | int(buf[3])
+	if boxSize < 12 || boxSize > len(buf) {
+		boxSize = len(buf) // Use available data if box extends beyond buffer.
+	}
+
+	// Major brand at bytes 8-11.
+	major := string(buf[8:12])
+	if mime, ok := isobmffBrands[major]; ok {
+		return mime
+	}
+
+	// Scan compatible brands starting at byte 16, in 4-byte chunks.
+	for i := 16; i+4 <= boxSize; i += 4 {
+		brand := string(buf[i : i+4])
+		if mime, ok := isobmffBrands[brand]; ok {
+			return mime
+		}
+	}
+
+	return ""
+}
+
 // detectTextFormat checks if the buffer looks like a known text-based format.
 func detectTextFormat(buf []byte) string {
 	s := strings.TrimSpace(string(buf))
@@ -206,10 +256,22 @@ func detectTextFormat(buf []byte) string {
 		return "image/vnd.dxf"
 	}
 
-	// XML: starts with <?xml or a tag starting with <.
-	// Check for XML declaration first (most reliable).
+	// RTF: starts with {\rtf
+	if strings.HasPrefix(s, "{\\rtf") {
+		return "application/rtf"
+	}
+
+	// XML: starts with <?xml. Check for SVG before generic XML.
 	if strings.HasPrefix(s, "<?xml") {
+		if strings.Contains(s, "<svg") {
+			return "image/svg+xml"
+		}
 		return "application/xml"
+	}
+
+	// SVG without XML declaration.
+	if strings.HasPrefix(s, "<svg") {
+		return "image/svg+xml"
 	}
 
 	// HTML: starts with <!DOCTYPE html (case-insensitive) or <html.
@@ -222,6 +284,11 @@ func detectTextFormat(buf []byte) string {
 	// EML (RFC 2822): starts with common email headers.
 	if looksLikeEML(s) {
 		return "message/rfc822"
+	}
+
+	// JSON: starts with { or [
+	if len(s) > 0 && (s[0] == '{' || s[0] == '[') {
+		return "application/json"
 	}
 
 	return ""

@@ -1,0 +1,16 @@
+{
+  "text": "Hello SVG\nRed text\nand\nblue text",
+  "metadata": {
+    "dc:description": [
+      "A simple test SVG with text elements"
+    ],
+    "dc:format": [
+      "image/svg+xml"
+    ],
+    "dc:title": [
+      "Test SVG"
+    ]
+  },
+  "contentType": "image/svg+xml",
+  "language": ""
+}

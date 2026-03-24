@@ -5,13 +5,20 @@ package detect
 // don't match. Extensions include the leading dot and are lowercase.
 var extMap = map[string]string{
 	// Text
-	".txt":  "text/plain",
-	".csv":  "text/csv",
-	".tsv":  "text/tab-separated-values",
-	".html": "text/html",
-	".htm":  "text/html",
-	".xml":  "application/xml",
-	".json": "application/json",
+	".txt":      "text/plain",
+	".csv":      "text/csv",
+	".tsv":      "text/tab-separated-values",
+	".html":     "text/html",
+	".htm":      "text/html",
+	".xml":      "application/xml",
+	".json":     "application/json",
+	".yaml":     "application/x-yaml",
+	".yml":      "application/x-yaml",
+	".md":       "text/markdown",
+	".markdown": "text/markdown",
+	".svg":      "image/svg+xml",
+	".rtf":      "application/rtf",
+	".log":      "text/plain",
 
 	// Office OOXML
 	".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -50,6 +57,11 @@ var extMap = map[string]string{
 	// CAD
 	".dxf": "image/vnd.dxf",
 	".dwg": "image/vnd.dwg",
+
+	// HEIC/HEIF/AVIF
+	".heic": "image/heic",
+	".heif": "image/heif",
+	".avif": "image/avif",
 
 	// Email
 	".eml": "message/rfc822",

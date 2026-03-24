@@ -10,12 +10,21 @@ const DEFAULT_MAX_BYTES = 10 * 1024 * 1024;
 
 const MIME_TEXT_PLAIN = 'text/plain';
 
-/** Extracts text content from plain text files. */
+/** Extracts text content from plain text and text-like files. */
 export class TextExtractor implements Extractor {
   private readonly maxBytes: number;
+  private readonly mimeTypes: Set<string>;
 
-  constructor(maxBytes: number = DEFAULT_MAX_BYTES) {
-    this.maxBytes = maxBytes;
+  constructor(maxBytes?: number);
+  constructor(mimeTypes: string[], maxBytes?: number);
+  constructor(first?: number | string[], second?: number) {
+    if (Array.isArray(first)) {
+      this.mimeTypes = new Set(first);
+      this.maxBytes = second ?? DEFAULT_MAX_BYTES;
+    } else {
+      this.mimeTypes = new Set([MIME_TEXT_PLAIN]);
+      this.maxBytes = first ?? DEFAULT_MAX_BYTES;
+    }
   }
 
   async extract(
@@ -23,7 +32,7 @@ export class TextExtractor implements Extractor {
     mime: string,
     options?: ExtractOptions,
   ): Promise<ExtractionResult> {
-    if (mime !== MIME_TEXT_PLAIN) {
+    if (!this.mimeTypes.has(mime)) {
       throw new UnsupportedFormatError(`unsupported format: ${mime}`);
     }
 
@@ -31,13 +40,8 @@ export class TextExtractor implements Extractor {
 
     if (data.length === 0) {
       const metadata = createMetadata();
-      metadataSet(metadata, KEY_FORMAT, MIME_TEXT_PLAIN);
-      return {
-        text: '',
-        metadata,
-        contentType: MIME_TEXT_PLAIN,
-        language: '',
-      };
+      metadataSet(metadata, KEY_FORMAT, mime);
+      return { text: '', metadata, contentType: mime, language: '' };
     }
 
     if (data.length > this.maxBytes) {
@@ -50,17 +54,12 @@ export class TextExtractor implements Extractor {
     const text = decoder.decode(data);
 
     const metadata = createMetadata();
-    metadataSet(metadata, KEY_FORMAT, MIME_TEXT_PLAIN);
+    metadataSet(metadata, KEY_FORMAT, mime);
 
-    return {
-      text,
-      metadata,
-      contentType: MIME_TEXT_PLAIN,
-      language: '',
-    };
+    return { text, metadata, contentType: mime, language: '' };
   }
 
   supportedMIMETypes(): string[] {
-    return [MIME_TEXT_PLAIN];
+    return [...this.mimeTypes];
   }
 }

@@ -31,6 +31,18 @@ var benchFixtures = []benchFixture{
 	{"FLAC", "../testdata/simple.flac", "audio/flac"},
 	{"WAV", "../testdata/simple.wav", "audio/wav"},
 	{"DXF", "../testdata/simple.dxf", "image/vnd.dxf"},
+	{"XML", "../testdata/simple.xml", ""},
+	{"HTML", "../testdata/simple.html", ""},
+	{"EML", "../testdata/simple.eml", ""},
+	{"EML_multipart", "../testdata/multipart.eml", ""},
+	{"JSON", "../testdata/simple.json", "application/json"},
+	{"CSV", "../testdata/simple.csv", "text/csv"},
+	{"YAML", "../testdata/simple.yaml", "application/x-yaml"},
+	{"Markdown", "../testdata/simple.md", "text/markdown"},
+	{"SVG", "../testdata/simple.svg", ""},
+	{"RTF", "../testdata/simple.rtf", ""},
+	{"HEIC", "../testdata/simple.heic", "image/heic"},
+	{"AVIF", "../testdata/simple.avif", "image/avif"},
 }
 
 func BenchmarkExtract(b *testing.B) {

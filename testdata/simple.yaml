@@ -1,0 +1,10 @@
+name: content-extractor
+version: 1.0.0
+description: A text extraction library
+features:
+  - text
+  - metadata
+  - detection
+settings:
+  maxBytes: 10485760
+  streaming: true

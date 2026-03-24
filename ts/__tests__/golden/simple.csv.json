@@ -1,0 +1,10 @@
+{
+  "text": "Name,Age,City\nAlice,30,New York\nBob,25,San Francisco\nCharlie,35,Chicago\n",
+  "metadata": {
+    "dc:format": [
+      "text/csv"
+    ]
+  },
+  "contentType": "text/csv",
+  "language": ""
+}

@@ -32,6 +32,8 @@ import type { ExtractionResult, ExtractOptions } from './extractor.js';
 import { Registry } from './registry.js';
 import { DefaultDetector } from './detect.js';
 import { TextExtractor } from './formats/text.js';
+import { SvgExtractor } from './formats/svg.js';
+import { RtfExtractor } from './formats/rtf.js';
 import { DXFExtractor as DxfExtractor } from './formats/dxf.js';
 import { ImageExtractor } from './formats/image.js';
 import { AudioExtractor } from './formats/audio.js';
@@ -61,8 +63,17 @@ export function createRegistry(options?: CreateRegistryOptions): Registry {
   const r = new Registry();
   r.setDetector(new DefaultDetector());
   r.register(new TextExtractor());
+  r.register(new TextExtractor([
+    'application/json',
+    'text/csv',
+    'text/tab-separated-values',
+    'application/x-yaml',
+    'text/markdown',
+  ]));
   r.register(new XMLExtractor());
   r.register(new HTMLExtractor());
+  r.register(new SvgExtractor());
+  r.register(new RtfExtractor());
   r.register(new DxfExtractor());
   r.register(new ImageExtractor({
     enableOCR: options?.enableOCR ?? false,

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100">
+  <title>Test SVG</title>
+  <desc>A simple test SVG with text elements</desc>
+  <rect x="10" y="10" width="180" height="80" fill="#eee" stroke="#333"/>
+  <text x="100" y="40" text-anchor="middle" font-size="16">Hello SVG</text>
+  <text x="100" y="70" text-anchor="middle" font-size="12">
+    <tspan fill="red">Red text</tspan> and <tspan fill="blue">blue text</tspan>
+  </text>
+</svg>

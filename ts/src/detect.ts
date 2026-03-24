@@ -54,6 +54,8 @@ const signatures: MagicSignature[] = [
   { mime: 'application/x-ole2', offset: 0, magic: new Uint8Array([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]) },
   // DWG
   { mime: 'image/vnd.dwg', offset: 0, magic: new Uint8Array([0x41, 0x43, 0x31, 0x30]) }, // AC10
+  // ISOBMFF container (HEIC, HEIF, AVIF) — ftyp box type at offset 4.
+  { mime: 'application/x-isobmff', offset: 4, magic: new Uint8Array([0x66, 0x74, 0x79, 0x70]) }, // ftyp
 ];
 
 const validODFMIME = new Set([
@@ -98,6 +100,16 @@ const extMap: Record<string, string> = {
   '.wav': 'audio/wav',
   '.ogg': 'audio/ogg',
   '.flac': 'audio/flac',
+  '.yaml': 'application/x-yaml',
+  '.yml': 'application/x-yaml',
+  '.md': 'text/markdown',
+  '.markdown': 'text/markdown',
+  '.svg': 'image/svg+xml',
+  '.rtf': 'application/rtf',
+  '.log': 'text/plain',
+  '.heic': 'image/heic',
+  '.heif': 'image/heif',
+  '.avif': 'image/avif',
   '.dxf': 'image/vnd.dxf',
   '.dwg': 'image/vnd.dwg',
   '.eml': 'message/rfc822',
@@ -120,7 +132,14 @@ export class DefaultDetector implements Detector {
         const zipMIME = detectZIPFormat(data);
         if (zipMIME) return zipMIME;
       }
-      return mime;
+      // ISOBMFF-based formats need brand inspection.
+      if (mime === 'application/x-isobmff') {
+        const bmffMIME = detectISOBMFF(buf);
+        if (bmffMIME) return bmffMIME;
+        // Unknown ISOBMFF brand — fall through to text/extension detection.
+      } else {
+        return mime;
+      }
     }
 
     // Check for text-based formats.
@@ -199,6 +218,44 @@ function detectZIPFormat(data: Uint8Array): string | null {
   }
 }
 
+/** ISOBMFF brand-to-MIME mapping. */
+const isobmffBrands: Record<string, string> = {
+  heic: 'image/heic',
+  heix: 'image/heic',
+  heim: 'image/heic',
+  heis: 'image/heic',
+  mif1: 'image/heif',
+  msf1: 'image/heif',
+  avif: 'image/avif',
+  avis: 'image/avif',
+};
+
+/**
+ * Detect specific ISOBMFF format from ftyp box brands.
+ * ftyp layout: [4B size][4B "ftyp"][4B major_brand][4B minor_version][4B compatible_brands...]
+ */
+function detectISOBMFF(buf: Uint8Array): string | null {
+  if (buf.length < 12) return null;
+
+  // Read box size (big-endian uint32).
+  let boxSize = (buf[0]! << 24) | (buf[1]! << 16) | (buf[2]! << 8) | buf[3]!;
+  if (boxSize < 12 || boxSize > buf.length) {
+    boxSize = buf.length;
+  }
+
+  // Major brand at bytes 8-11.
+  const major = String.fromCharCode(buf[8]!, buf[9]!, buf[10]!, buf[11]!);
+  if (isobmffBrands[major]) return isobmffBrands[major]!;
+
+  // Scan compatible brands starting at byte 16.
+  for (let i = 16; i + 4 <= boxSize; i += 4) {
+    const brand = String.fromCharCode(buf[i]!, buf[i + 1]!, buf[i + 2]!, buf[i + 3]!);
+    if (isobmffBrands[brand]) return isobmffBrands[brand]!;
+  }
+
+  return null;
+}
+
 function detectTextFormat(buf: Uint8Array): string | null {
   const s = new TextDecoder().decode(buf).trimStart();
 
@@ -207,9 +264,22 @@ function detectTextFormat(buf: Uint8Array): string | null {
     return 'image/vnd.dxf';
   }
 
-  // XML: starts with <?xml declaration.
+  // RTF: starts with {\rtf
+  if (s.startsWith('{\\rtf')) {
+    return 'application/rtf';
+  }
+
+  // XML: starts with <?xml. Check for SVG before generic XML.
   if (s.startsWith('<?xml')) {
+    if (s.includes('<svg')) {
+      return 'image/svg+xml';
+    }
     return 'application/xml';
+  }
+
+  // SVG without XML declaration.
+  if (s.startsWith('<svg')) {
+    return 'image/svg+xml';
   }
 
   // HTML: starts with <!DOCTYPE html or <html (case-insensitive).
@@ -221,6 +291,11 @@ function detectTextFormat(buf: Uint8Array): string | null {
   // EML (RFC 2822): starts with common email headers.
   if (looksLikeEML(s)) {
     return 'message/rfc822';
+  }
+
+  // JSON: starts with { or [
+  if (s.length > 0 && (s[0] === '{' || s[0] === '[')) {
+    return 'application/json';
   }
 
   return null;

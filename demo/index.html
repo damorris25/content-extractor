@@ -51,6 +51,26 @@
     .status.error   { display: block; background: #f8d7da; color: #721c24; }
     .status.success { display: block; background: #d4edda; color: #155724; }
 
+    /* Progress bar */
+    .progress-bar {
+      height: 3px;
+      background: #e0e0e0;
+      border-radius: 2px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+    .progress-bar .progress-fill {
+      height: 100%;
+      background: #856404;
+      border-radius: 2px;
+      animation: progress-pulse 1.5s ease-in-out infinite;
+      width: 40%;
+    }
+    @keyframes progress-pulse {
+      0%, 100% { transform: translateX(-100%); opacity: 0.6; }
+      50% { transform: translateX(200%); opacity: 1; }
+    }
+
     /* Results */
     .results { display: none; }
     .results.visible { display: block; }
@@ -161,8 +181,8 @@
 
   <div class="drop-zone" id="dropZone">
     <p><strong>Drop a file here</strong> or click to browse</p>
-    <p>Supports: DOCX, XLSX, PPTX, ODT, ODS, ODP, PDF, XML, HTML, EML, images, audio, DXF, text</p>
-    <input type="file" id="fileInput" />
+    <p>Supports: DOCX, XLSX, PPTX, ODT, ODS, ODP, PDF, XML, HTML, SVG, EML, JSON, CSV, TSV, YAML, Markdown, RTF, HEIC, HEIF, AVIF, JPEG, PNG, TIFF, BMP, GIF, WebP, MP3, OGG, FLAC, WAV, DXF</p>
+    <input type="file" id="fileInput" accept=".docx,.xlsx,.pptx,.odt,.ods,.odp,.pdf,.xml,.html,.htm,.svg,.eml,.json,.csv,.tsv,.yaml,.yml,.md,.markdown,.rtf,.heic,.heif,.avif,.jpg,.jpeg,.png,.tif,.tiff,.bmp,.gif,.webp,.mp3,.ogg,.flac,.wav,.dxf,.txt,.log" />
   </div>
 
   <div class="status" id="status"></div>
@@ -245,23 +265,49 @@
     });
 
     // --- Main handler ---
+    let elapsedTimer = null;
+
     async function handleFile(file) {
       showStatus('loading', `Extracting "${file.name}" (${formatBytes(file.size)})…`);
       resultsEl.classList.remove('visible');
+
+      // Start elapsed time counter for long extractions.
+      const t0 = performance.now();
+      clearInterval(elapsedTimer);
+      elapsedTimer = setInterval(() => {
+        const sec = ((performance.now() - t0) / 1000).toFixed(1);
+        showStatus('loading', `Extracting "${file.name}" (${formatBytes(file.size)})… ${sec}s`);
+      }, 500);
 
       try {
         await setupReady;
         const arrayBuf = await file.arrayBuffer();
         const data = new Uint8Array(arrayBuf);
 
-        const t0 = performance.now();
-        const result = await registry.extract(data, undefined, { filename: file.name });
-        const elapsed = performance.now() - t0;
+        // 60-second timeout to prevent indefinite hangs.
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 60000);
 
-        showStatus('success', `Extraction complete in ${elapsed.toFixed(1)} ms`);
+        const result = await registry.extract(data, undefined, {
+          filename: file.name,
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+
+        const elapsed = performance.now() - t0;
+        clearInterval(elapsedTimer);
+        elapsedTimer = null;
+
+        showStatus('success', `Extraction complete in ${elapsed < 1000 ? elapsed.toFixed(1) + ' ms' : (elapsed / 1000).toFixed(1) + ' s'}`);
         renderResults(file, data, result, elapsed);
       } catch (err) {
-        showStatus('error', `Error: ${err.message}`);
+        clearInterval(elapsedTimer);
+        elapsedTimer = null;
+        const elapsed = performance.now() - t0;
+        const msg = err.name === 'AbortError'
+          ? `Extraction timed out after ${(elapsed / 1000).toFixed(0)}s — try a smaller file`
+          : `Error: ${err.message}`;
+        showStatus('error', msg);
         console.error(err);
       }
     }
@@ -322,7 +368,11 @@
     // --- Helpers ---
     function showStatus(type, msg) {
       statusEl.className = 'status ' + type;
-      statusEl.textContent = msg;
+      if (type === 'loading') {
+        statusEl.innerHTML = esc(msg) + '<div class="progress-bar"><div class="progress-fill"></div></div>';
+      } else {
+        statusEl.textContent = msg;
+      }
     }
 
     function kvRow(label, value) {

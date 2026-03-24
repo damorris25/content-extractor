@@ -30,6 +30,9 @@ var supportedMIMEs = map[string]bool{
 	"image/bmp":  true,
 	"image/gif":  true,
 	"image/webp": true,
+	"image/heic": true,
+	"image/heif": true,
+	"image/avif": true,
 }
 
 // Extractor extracts metadata and optionally text (via OCR) from image files.
@@ -53,6 +56,7 @@ func (e *Extractor) maxSize() int64 {
 	}
 	return DefaultMaxImageSize
 }
+
 
 // Extract reads an image file from r and returns extracted metadata.
 func (e *Extractor) Extract(ctx context.Context, r io.Reader, mime string) (*extractor.Result, error) {
@@ -89,22 +93,30 @@ func (e *Extractor) Extract(ctx context.Context, r io.Reader, mime string) (*ext
 	}
 	result.Metadata.Set(metadata.KeyFormat, mime)
 
-	// Extract image dimensions via stdlib.
-	extractDimensions(data, result)
+	// Format-specific metadata extraction.
+	switch mime {
+	case "image/heic", "image/heif", "image/avif":
+		// ISOBMFF container — dimensions from ispe, EXIF from embedded item.
+		// TRACKED-TASK: OCR not supported for HEIC/AVIF (Tesseract/Leptonica can't decode) - see TODO.md
+		extractISOBMFF(data, result)
+	default:
+		// Extract image dimensions via stdlib.
+		extractDimensions(data, result)
 
-	// Extract EXIF metadata (JPEG and TIFF only).
-	if mime == "image/jpeg" || mime == "image/tiff" {
-		extractEXIF(data, result)
-	}
+		// Extract EXIF metadata (JPEG and TIFF only).
+		if mime == "image/jpeg" || mime == "image/tiff" {
+			extractEXIF(data, result)
+		}
 
-	// Extract PNG text chunks.
-	if mime == "image/png" {
-		extractPNGText(data, result)
-	}
+		// Extract PNG text chunks.
+		if mime == "image/png" {
+			extractPNGText(data, result)
+		}
 
-	// Extract GeoTIFF metadata (TIFF only).
-	if mime == "image/tiff" {
-		extractGeoTIFF(data, result.Metadata)
+		// Extract GeoTIFF metadata (TIFF only).
+		if mime == "image/tiff" {
+			extractGeoTIFF(data, result.Metadata)
+		}
 	}
 
 	// Perform OCR if an engine is configured.
@@ -159,64 +171,7 @@ func extractEXIF(data []byte, result *extractor.Result) {
 	if err != nil {
 		return // No EXIF data is not an error.
 	}
-
-	// Camera make/model.
-	if tag, err := x.Get(goexif.Make); err == nil {
-		result.Metadata.Set("exif:make", cleanTag(tag.String()))
-	}
-	if tag, err := x.Get(goexif.Model); err == nil {
-		result.Metadata.Set("exif:model", cleanTag(tag.String()))
-	}
-
-	// Date/time.
-	if tag, err := x.Get(goexif.DateTimeOriginal); err == nil {
-		result.Metadata.Set(metadata.KeyDate, metadata.NormalizeDate(cleanTag(tag.String())))
-	} else if tag, err := x.Get(goexif.DateTime); err == nil {
-		result.Metadata.Set(metadata.KeyDate, metadata.NormalizeDate(cleanTag(tag.String())))
-	}
-
-	// Orientation.
-	if tag, err := x.Get(goexif.Orientation); err == nil {
-		result.Metadata.Set("exif:orientation", cleanTag(tag.String()))
-	}
-
-	// Software.
-	if tag, err := x.Get(goexif.Software); err == nil {
-		result.Metadata.Set(metadata.KeyApplication, cleanTag(tag.String()))
-	}
-
-	// Artist/copyright.
-	if tag, err := x.Get(goexif.Artist); err == nil {
-		result.Metadata.Set(metadata.KeyCreator, cleanTag(tag.String()))
-	}
-	if tag, err := x.Get(goexif.Copyright); err == nil {
-		result.Metadata.Set("exif:copyright", cleanTag(tag.String()))
-	}
-
-	// Image description.
-	if tag, err := x.Get(goexif.ImageDescription); err == nil {
-		result.Metadata.Set(metadata.KeyDescription, cleanTag(tag.String()))
-	}
-
-	// GPS coordinates.
-	if lat, lon, err := x.LatLong(); err == nil {
-		result.Metadata.Set("exif:gps-latitude", fmt.Sprintf("%.6f", lat))
-		result.Metadata.Set("exif:gps-longitude", fmt.Sprintf("%.6f", lon))
-	}
-
-	// Exposure.
-	if tag, err := x.Get(goexif.ExposureTime); err == nil {
-		result.Metadata.Set("exif:exposure-time", cleanTag(tag.String()))
-	}
-	if tag, err := x.Get(goexif.FNumber); err == nil {
-		result.Metadata.Set("exif:f-number", cleanTag(tag.String()))
-	}
-	if tag, err := x.Get(goexif.ISOSpeedRatings); err == nil {
-		result.Metadata.Set("exif:iso", cleanTag(tag.String()))
-	}
-	if tag, err := x.Get(goexif.FocalLength); err == nil {
-		result.Metadata.Set("exif:focal-length", cleanTag(tag.String()))
-	}
+	extractEXIFFromDecoded(x, result)
 }
 
 // extractPNGText extracts tEXt chunks from PNG data.

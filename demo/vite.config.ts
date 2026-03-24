@@ -9,6 +9,6 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ['@content-extractor/core'],
-    include: ['pdfjs-dist'],
+    include: ['pdfjs-dist', 'tesseract.js'],
   },
 });

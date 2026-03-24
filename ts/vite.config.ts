@@ -10,7 +10,7 @@ export default defineConfig({
       fileName: 'index',
     },
     rollupOptions: {
-      external: ['pdfjs-dist'],
+      external: ['pdfjs-dist', 'tesseract.js'],
     },
     target: 'es2020',
     sourcemap: true,

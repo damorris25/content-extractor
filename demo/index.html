@@ -205,11 +205,10 @@
   </div>
 
   <script type="module">
-    import { extract } from '@content-extractor/core';
+    import { createRegistry, ImageExtractor } from '@content-extractor/core';
 
     // Configure pdfjs-dist worker for Vite.
-    // This must happen before any PDF extraction call.
-    const pdfReady = (async () => {
+    const setupReady = (async () => {
       try {
         const pdfjs = await import('pdfjs-dist');
         const workerModule = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
@@ -218,6 +217,11 @@
         // pdfjs-dist not available — PDF extraction will show a clear error.
       }
     })();
+
+    // Create registry with OCR-enabled image extractor.
+    const registry = createRegistry();
+    // Re-register ImageExtractor with OCR enabled (overrides the default one).
+    registry.register(new ImageExtractor({ enableOCR: true }));
 
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
@@ -248,12 +252,12 @@
       resultsEl.classList.remove('visible');
 
       try {
-        await pdfReady;
+        await setupReady;
         const arrayBuf = await file.arrayBuffer();
         const data = new Uint8Array(arrayBuf);
 
         const t0 = performance.now();
-        const result = await extract(data, undefined, { filename: file.name });
+        const result = await registry.extract(data, undefined, { filename: file.name });
         const elapsed = performance.now() - t0;
 
         showStatus('success', `Extraction complete in ${elapsed.toFixed(1)} ms`);

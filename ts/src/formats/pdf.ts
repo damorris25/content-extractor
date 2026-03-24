@@ -57,12 +57,14 @@ export class PdfExtractor implements Extractor {
     checkAborted(options?.signal);
 
     // Dynamic import of pdfjs-dist — it is an optional peer dependency.
-    // Use variable to prevent TypeScript from resolving the module at compile time.
-    const pdfModuleName = 'pdfjs-dist';
+    // The string literal (not a variable) is required for bundlers like Vite
+    // to resolve the module. The @ts-ignore suppresses the missing-types error
+    // since pdfjs-dist is an optional peer dep (not in devDependencies).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let pdfjsLib: any;
     try {
-      pdfjsLib = await import(/* @vite-ignore */ pdfModuleName);
+      // @ts-ignore — optional peer dependency
+      pdfjsLib = await import('pdfjs-dist');
     } catch {
       throw new Error(
         'pdfjs-dist is required for PDF extraction. Install it: npm install pdfjs-dist',
@@ -71,21 +73,11 @@ export class PdfExtractor implements Extractor {
 
     // Configure the PDF.js worker (once per runtime).
     // In browser environments, pdfjs-dist needs a worker to avoid blocking the
-    // main thread. We try to resolve the worker from the package; if that fails,
-    // pdfjs-dist falls back to running on the main thread.
+    // main thread. The caller can set GlobalWorkerOptions.workerSrc before
+    // calling extract (recommended). If not set, we skip — pdfjs-dist will
+    // fall back to running on the main thread.
     if (!workerConfigured && pdfjsLib.GlobalWorkerOptions) {
       workerConfigured = true;
-      if (!pdfjsLib.GlobalWorkerOptions.workerSrc && !pdfjsLib.GlobalWorkerOptions.workerPort) {
-        try {
-          // Try importing the worker module — this works when the bundler
-          // resolves pdfjs-dist (e.g. Vite in dev mode).
-          const workerModuleName = 'pdfjs-dist/build/pdf.worker.min.mjs';
-          await import(/* @vite-ignore */ workerModuleName);
-          pdfjsLib.GlobalWorkerOptions.workerSrc = workerModuleName;
-        } catch {
-          // Worker not available — pdfjs-dist will use its main-thread fallback.
-        }
-      }
     }
 
     let doc;

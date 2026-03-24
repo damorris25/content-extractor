@@ -68,9 +68,9 @@ export async function terminateOCR(): Promise<void> {
 
 /** Dynamically import tesseract.js. Throws descriptive error if not installed. */
 async function loadTesseract(): Promise<any> {
-  const moduleName = 'tesseract.js';
   try {
-    return await import(/* @vite-ignore */ moduleName);
+    // @ts-ignore — optional peer dependency
+    return await import('tesseract.js');
   } catch {
     throw new Error(
       'tesseract.js is required for OCR. Install it: npm install tesseract.js',

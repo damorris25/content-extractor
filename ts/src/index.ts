@@ -25,6 +25,8 @@ export {
 export type { Detector } from './detect.js';
 export { DefaultDetector } from './detect.js';
 export { Registry } from './registry.js';
+export { ImageExtractor } from './formats/image.js';
+export type { ImageExtractorOptions } from './formats/image.js';
 
 import type { ExtractionResult, ExtractOptions } from './extractor.js';
 import { Registry } from './registry.js';

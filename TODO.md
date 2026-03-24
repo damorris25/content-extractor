@@ -1,7 +1,7 @@
 # TODO
 
-<!-- freshness: 2026-03-21 -->
-<!-- last-synced: 2026-03-21 — date this file was verified against code -->
+<!-- freshness: 2026-03-24 -->
+<!-- last-synced: 2026-03-24 — date this file was verified against code -->
 
 Consolidated task tracking for the project. All `TRACKED-TASK:` comments in
 code reference sections of this file.
@@ -39,6 +39,11 @@ code reference sections of this file.
 - [x] License audit tooling (automated check of dependency licenses)
 - [x] Quality test content for accuracy testing (rich fixtures + accuracy test suite)
 - [x] TypeScript library (browser-first, golden file parity with Go)
+- [x] XML/HTML/EML extractors (tag stripping, email parsing)
+- [x] JSON/CSV/TSV/YAML/Markdown pass-through extractors
+- [x] SVG text extractor (text, tspan, textPath elements + title/desc metadata)
+- [x] RTF text extractor (control word parser with Unicode support)
+- [x] HEIC/HEIF/AVIF image support (ISOBMFF parser for dimensions + EXIF, zero new deps)
 
 ## P3 — Future
 
@@ -48,6 +53,7 @@ code reference sections of this file.
 - [ ] Additional edge-case test coverage (both Go and TS)
 - [ ] OCR end-to-end testing with Tesseract installed (CI job with CGO + libtesseract)
 - [ ] OCR multi-language testing (beyond English)
+- [ ] HEIC/AVIF OCR support (requires image decoder — Tesseract/Leptonica can't decode these formats natively)
 
 ## Known Issues & Blockers
 
@@ -59,10 +65,12 @@ _None currently._
 
 - TypeScript PDF extractor requires `pdfjs-dist` peer dep — not included in golden parity tests yet (Go uses `ledongthuc/pdf` which may produce slightly different text)
 - `@xmldom/xmldom` needed as dev dep for Node.js tests (browser DOMParser not available in Node)
+- RTF font table text leaks into output (e.g. "Times New Roman;") — both Go and TS produce identical output so parity is maintained, accepted as-is
 
 ### Workarounds In Place
 
 - `stripInnerXMLDeclarations()` in `ts/src/formats/xml-utils.ts` — removes `<?xml...?>` PIs after document prolog because `@xmldom/xmldom` throws fatalError on them (Go's `encoding/xml` and browser DOMParser both ignore them)
+- RTF hex escapes `\'XX` where byte > 0x7F emit `\uFFFD` in TS to match Go's `CleanUTF8` behavior
 
 ## Discoveries
 
@@ -74,6 +82,8 @@ _None yet._
   <!-- TRACKED-TASK in detect/signatures.go:37 -->
 - [ ] WAV/WebP disambiguation needs bytes 8-11 check (RIFF + WAVE vs RIFF + WEBP)
   <!-- TRACKED-TASK in detect/signatures.go:57 -->
+- [ ] OCR not supported for HEIC/AVIF — Tesseract/Leptonica can't decode these formats; would need a full image decoder
+  <!-- TRACKED-TASK in formats/image/image.go:100 and ts/src/formats/image.ts:114 -->
 
 ## Completed
 
@@ -114,5 +124,20 @@ _None yet._
   - Low: O(n²) Latin-1 decode → chunked `fromCharCode` in audio.ts
   - Low: PDF page iteration capped at 10K in pdf.ts
   - Low: XXE protection via DOCTYPE stripping for xmldom in xml-utils.ts
+- [x] 2026-03-24: XML extractor — encoding/xml token parser (Go), state machine (TS)
+- [x] 2026-03-24: HTML extractor — golang.org/x/net/html (Go), state machine (TS)
+- [x] 2026-03-24: EML extractor — net/mail+mime/multipart (Go), custom parser (TS), multipart depth limit
+- [x] 2026-03-24: Text format extractors — JSON, CSV, TSV, YAML, Markdown (pass-through with detection)
+- [x] 2026-03-24: SVG extractor — text/tspan/textPath extraction, title/desc metadata
+- [x] 2026-03-24: RTF extractor — control word state machine, Unicode escapes, hex byte handling
+- [x] 2026-03-24: HEIC/HEIF/AVIF support — custom ISOBMFF parser (~300 lines Go, ~270 lines TS), zero new deps:
+  - ftyp brand detection (heic/heix/heim/heis/mif1/msf1/avif/avis)
+  - Dimensions from ispe box (meta > iprp > ipco > ispe)
+  - EXIF via iloc + iinf/infe (4-byte header prefix skip, TIFF blob to existing parser)
+  - Safety: box count cap (1K), item count cap (10K), bounds-checked offsets
+- [x] 2026-03-24: OCR downscaling — auto-resize images >2048px via OffscreenCanvas before Tesseract
+- [x] 2026-03-24: Demo app updates — progress bar, elapsed time counter, 60s timeout, all 27 formats listed
+- [x] 2026-03-24: README updated — 27 formats, new benchmarks, accuracy tables, 52 golden files, 61 TS tests
+- [x] 2026-03-24: Benchmarks added for all new formats (Go + TS): HEIC 612 MB/s, AVIF 562 MB/s, RTF 114 MB/s
 
 ---

@@ -40,6 +40,8 @@ import { OdtExtractor } from './formats/odt.js';
 import { OdsExtractor } from './formats/ods.js';
 import { OdpExtractor } from './formats/odp.js';
 import { PdfExtractor } from './formats/pdf.js';
+import { XMLExtractor } from './formats/xml.js';
+import { HTMLExtractor } from './formats/html.js';
 
 /**
  * Create a registry pre-loaded with all built-in extractors and format detection.
@@ -48,6 +50,8 @@ export function createRegistry(): Registry {
   const r = new Registry();
   r.setDetector(new DefaultDetector());
   r.register(new TextExtractor());
+  r.register(new XMLExtractor());
+  r.register(new HTMLExtractor());
   r.register(new DxfExtractor());
   r.register(new ImageExtractor());
   r.register(new AudioExtractor());

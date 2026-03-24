@@ -198,12 +198,27 @@ func readZIPEntry(zr *zip.Reader, name string) string {
 
 // detectTextFormat checks if the buffer looks like a known text-based format.
 func detectTextFormat(buf []byte) string {
-	s := string(buf)
+	s := strings.TrimSpace(string(buf))
+
 	// DXF files start with a section header.
-	if strings.HasPrefix(strings.TrimSpace(s), "0\nSECTION") ||
-		strings.HasPrefix(strings.TrimSpace(s), "0\r\nSECTION") {
+	if strings.HasPrefix(s, "0\nSECTION") ||
+		strings.HasPrefix(s, "0\r\nSECTION") {
 		return "image/vnd.dxf"
 	}
+
+	// XML: starts with <?xml or a tag starting with <.
+	// Check for XML declaration first (most reliable).
+	if strings.HasPrefix(s, "<?xml") {
+		return "application/xml"
+	}
+
+	// HTML: starts with <!DOCTYPE html (case-insensitive) or <html.
+	lower := strings.ToLower(s)
+	if strings.HasPrefix(lower, "<!doctype html") ||
+		strings.HasPrefix(lower, "<html") {
+		return "text/html"
+	}
+
 	return ""
 }
 

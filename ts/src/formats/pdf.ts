@@ -19,6 +19,9 @@ const MIME_PDF = 'application/pdf';
 const DEFAULT_MAX_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_PAGES = 10000; // Safety cap on page iteration
 
+// Track whether we've already configured the worker.
+let workerConfigured = false;
+
 export class PdfExtractor implements Extractor {
   readonly maxSize: number;
 
@@ -66,11 +69,32 @@ export class PdfExtractor implements Extractor {
       );
     }
 
+    // Configure the PDF.js worker (once per runtime).
+    // In browser environments, pdfjs-dist needs a worker to avoid blocking the
+    // main thread. We try to resolve the worker from the package; if that fails,
+    // pdfjs-dist falls back to running on the main thread.
+    if (!workerConfigured && pdfjsLib.GlobalWorkerOptions) {
+      workerConfigured = true;
+      if (!pdfjsLib.GlobalWorkerOptions.workerSrc && !pdfjsLib.GlobalWorkerOptions.workerPort) {
+        try {
+          // Try importing the worker module — this works when the bundler
+          // resolves pdfjs-dist (e.g. Vite in dev mode).
+          const workerModuleName = 'pdfjs-dist/build/pdf.worker.min.mjs';
+          await import(/* @vite-ignore */ workerModuleName);
+          pdfjsLib.GlobalWorkerOptions.workerSrc = workerModuleName;
+        } catch {
+          // Worker not available — pdfjs-dist will use its main-thread fallback.
+        }
+      }
+    }
+
     let doc;
     try {
       const loadingTask = pdfjsLib.getDocument({
         data: data.slice(),
         useSystemFonts: true,
+        isEvalSupported: false,
+        useWorkerFetch: false,
       });
       doc = await loadingTask.promise;
     } catch (err) {

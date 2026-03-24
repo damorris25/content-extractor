@@ -1,0 +1,10 @@
+{
+  "text": "XML Developer's Guide\nAuthor One\n44.95\nAn in-depth look at creating applications with XML.\nMidnight Rain\nAuthor Two\n5.95\nA former architect battles corporate zombies.",
+  "metadata": {
+    "dc:format": [
+      "application/xml"
+    ]
+  },
+  "contentType": "application/xml",
+  "language": ""
+}

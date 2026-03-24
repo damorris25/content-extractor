@@ -1,0 +1,13 @@
+{
+  "text": "Simple Test Page\nHello World\nThis is a simple HTML test page for content extraction.\nItem one\nItem two\nItem three\nFooter text here.",
+  "metadata": {
+    "dc:format": [
+      "text/html"
+    ],
+    "dc:title": [
+      "Simple Test Page"
+    ]
+  },
+  "contentType": "text/html",
+  "language": ""
+}

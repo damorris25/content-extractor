@@ -75,5 +75,13 @@ describe('Golden file parity — Audio', () => {
   it('rich.mp3', () => assertGoldenMatch(registry, 'rich.mp3'));
 });
 
+describe('Golden file parity — XML', () => {
+  it('simple.xml', () => assertGoldenMatch(registry, 'simple.xml'));
+});
+
+describe('Golden file parity — HTML', () => {
+  it('simple.html', () => assertGoldenMatch(registry, 'simple.html'));
+});
+
 // PDF tests skipped unless pdfjs-dist is installed.
 // describe('Golden file parity — PDF', () => { ... });

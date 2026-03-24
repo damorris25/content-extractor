@@ -27,7 +27,7 @@
     "fflate": "^0.8.0"
   },
   "peerDependencies": {
-    "pdfjs-dist": "^4.0.0",
+    "pdfjs-dist": "^4.0.0 || ^5.0.0",
     "tesseract.js": "^5.0.0"
   },
   "peerDependenciesMeta": {

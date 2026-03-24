@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <book id="1">
+    <title>XML Developer's Guide</title>
+    <author>Author One</author>
+    <price>44.95</price>
+    <description>An in-depth look at creating applications with XML.</description>
+  </book>
+  <book id="2">
+    <title>Midnight Rain</title>
+    <author>Author Two</author>
+    <price>5.95</price>
+    <description>A former architect battles corporate zombies.</description>
+  </book>
+</catalog>

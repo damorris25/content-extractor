@@ -200,9 +200,23 @@ function detectZIPFormat(data: Uint8Array): string | null {
 
 function detectTextFormat(buf: Uint8Array): string | null {
   const s = new TextDecoder().decode(buf).trimStart();
+
+  // DXF files start with a section header.
   if (s.startsWith('0\nSECTION') || s.startsWith('0\r\nSECTION')) {
     return 'image/vnd.dxf';
   }
+
+  // XML: starts with <?xml declaration.
+  if (s.startsWith('<?xml')) {
+    return 'application/xml';
+  }
+
+  // HTML: starts with <!DOCTYPE html or <html (case-insensitive).
+  const lower = s.toLowerCase();
+  if (lower.startsWith('<!doctype html') || lower.startsWith('<html')) {
+    return 'text/html';
+  }
+
   return null;
 }
 

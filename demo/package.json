@@ -7,7 +7,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@content-extractor/core": "file:../ts",
+    "@damorris25/content-extractor": "file:../ts",
     "pdfjs-dist": "^5.5.207",
     "tesseract.js": "^7.0.0"
   },

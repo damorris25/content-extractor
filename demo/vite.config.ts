@@ -4,11 +4,11 @@ import { resolve } from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      '@content-extractor/core': resolve(__dirname, '../ts/src/index.ts'),
+      '@damorris25/content-extractor': resolve(__dirname, '../ts/src/index.ts'),
     },
   },
   optimizeDeps: {
-    exclude: ['@content-extractor/core'],
+    exclude: ['@damorris25/content-extractor'],
     include: ['pdfjs-dist'],
   },
 });

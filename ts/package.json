@@ -1,5 +1,5 @@
 {
-  "name": "@content-extractor/core",
+  "name": "@damorris25/content-extractor",
   "version": "0.1.0",
   "description": "Extract text content and metadata from unstructured file formats (Office, ODF, PDF, images, audio, CAD)",
   "type": "module",

@@ -255,7 +255,7 @@ npm test
 ### TypeScript Usage
 
 ```typescript
-import { extract, createRegistry } from '@content-extractor/core';
+import { extract, createRegistry } from '@damorris25/content-extractor';
 
 // One-shot extraction (auto-detects format)
 const result = await extract(fileBytes);
@@ -322,7 +322,7 @@ npm install tesseract.js
 ```
 
 ```typescript
-import { ImageExtractor } from '@content-extractor/core';
+import { ImageExtractor } from '@damorris25/content-extractor';
 
 const ext = new ImageExtractor({ enableOCR: true, ocrLanguage: 'eng' });
 const result = await ext.extract(imageBytes, 'image/png');
@@ -424,7 +424,7 @@ cd ts && npm install && npm run build && npm test
 ```
 
 ```typescript
-import { extract } from '@content-extractor/core';
+import { extract } from '@damorris25/content-extractor';
 
 const result = await extract(fileBytes);
 console.log(result.text, result.metadata, result.contentType);

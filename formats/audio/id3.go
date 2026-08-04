@@ -4,7 +4,7 @@ package audio
 import (
 	"strings"
 
-	"github.com/dmorris/content-extractor/extractor"
+	"github.com/damorris25/content-extractor/extractor"
 )
 
 // parseID3v2 extracts metadata from ID3v2 tags in MP3 files.

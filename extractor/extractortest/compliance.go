@@ -8,7 +8,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/dmorris/content-extractor/extractor"
+	"github.com/damorris25/content-extractor/extractor"
 )
 
 // RunComplianceTests runs the standard contract compliance tests against

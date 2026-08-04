@@ -73,6 +73,7 @@
     "vitest": "^3.0.0"
   },
   "license": "MIT",
+  "author": "Dana Morris <damorris25@gmail.com>",
   "engines": {
     "node": ">=20"
   }

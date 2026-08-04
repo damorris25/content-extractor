@@ -10,8 +10,8 @@ import (
 
 	lpdf "github.com/ledongthuc/pdf"
 
-	"github.com/dmorris/content-extractor/extractor"
-	"github.com/dmorris/content-extractor/metadata"
+	"github.com/damorris25/content-extractor/extractor"
+	"github.com/damorris25/content-extractor/metadata"
 )
 
 const (

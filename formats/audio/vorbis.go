@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dmorris/content-extractor/extractor"
+	"github.com/damorris25/content-extractor/extractor"
 )
 
 // parseOggVorbis extracts Vorbis comments from OGG files.

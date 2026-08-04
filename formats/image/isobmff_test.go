@@ -7,8 +7,8 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/dmorris/content-extractor/extractor"
-	"github.com/dmorris/content-extractor/metadata"
+	"github.com/damorris25/content-extractor/extractor"
+	"github.com/damorris25/content-extractor/metadata"
 )
 
 func TestImage_HEIC_Dimensions(t *testing.T) {

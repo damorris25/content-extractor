@@ -8,7 +8,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/dmorris/content-extractor/metadata"
+	"github.com/damorris25/content-extractor/metadata"
 )
 
 func TestImage_GeoTIFF_Metadata(t *testing.T) {

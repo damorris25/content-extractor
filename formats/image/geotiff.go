@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/dmorris/content-extractor/metadata"
+	"github.com/damorris25/content-extractor/metadata"
 )
 
 // GeoTIFF tag IDs.

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dmorris/content-extractor/metadata"
+	"github.com/damorris25/content-extractor/metadata"
 )
 
 // Accuracy tests validate extraction results against known expected content

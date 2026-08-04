@@ -14,8 +14,8 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 
-	"github.com/dmorris/content-extractor/extractor"
-	"github.com/dmorris/content-extractor/metadata"
+	"github.com/damorris25/content-extractor/extractor"
+	"github.com/damorris25/content-extractor/metadata"
 )
 
 const (

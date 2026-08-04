@@ -1,7 +1,7 @@
 // CONTRACT:C1-EXTRACTOR.1.0
 package office
 
-import "github.com/dmorris/content-extractor/extractor"
+import "github.com/damorris25/content-extractor/extractor"
 
 const (
 	// maxDecompressedEntrySize limits the decompressed size of individual ZIP entries

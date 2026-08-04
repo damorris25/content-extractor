@@ -14,8 +14,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dmorris/content-extractor/contentextractor"
-	"github.com/dmorris/content-extractor/detect"
+	"github.com/damorris25/content-extractor/contentextractor"
+	"github.com/damorris25/content-extractor/detect"
 )
 
 // goldenResult mirrors extractor.Result for JSON serialization with sorted metadata.

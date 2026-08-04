@@ -6,16 +6,16 @@ import (
 	"context"
 	"io"
 
-	"github.com/dmorris/content-extractor/detect"
-	"github.com/dmorris/content-extractor/extractor"
-	"github.com/dmorris/content-extractor/formats/audio"
-	"github.com/dmorris/content-extractor/formats/cad"
-	"github.com/dmorris/content-extractor/formats/email"
-	"github.com/dmorris/content-extractor/formats/image"
-	"github.com/dmorris/content-extractor/formats/odf"
-	"github.com/dmorris/content-extractor/formats/office"
-	"github.com/dmorris/content-extractor/formats/pdf"
-	"github.com/dmorris/content-extractor/formats/text"
+	"github.com/damorris25/content-extractor/detect"
+	"github.com/damorris25/content-extractor/extractor"
+	"github.com/damorris25/content-extractor/formats/audio"
+	"github.com/damorris25/content-extractor/formats/cad"
+	"github.com/damorris25/content-extractor/formats/email"
+	"github.com/damorris25/content-extractor/formats/image"
+	"github.com/damorris25/content-extractor/formats/odf"
+	"github.com/damorris25/content-extractor/formats/office"
+	"github.com/damorris25/content-extractor/formats/pdf"
+	"github.com/damorris25/content-extractor/formats/text"
 )
 
 // NewRegistry returns a registry pre-loaded with all built-in extractors

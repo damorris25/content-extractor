@@ -1,4 +1,4 @@
-module github.com/dmorris/content-extractor
+module github.com/damorris25/content-extractor
 
 go 1.26.1
 

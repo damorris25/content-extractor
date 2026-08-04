@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dmorris/content-extractor/extractor"
+	"github.com/damorris25/content-extractor/extractor"
 )
 
 const maxDetectBytes = 8192 // 8KB is sufficient for all known signatures

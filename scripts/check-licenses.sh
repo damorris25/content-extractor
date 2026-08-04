@@ -42,7 +42,7 @@ PASS_COUNT=0
 
 while IFS=, read -r module url license; do
     # Skip our own module.
-    if [[ "$module" == github.com/dmorris/content-extractor* ]]; then
+    if [[ "$module" == github.com/damorris25/content-extractor* ]]; then
         continue
     fi
 

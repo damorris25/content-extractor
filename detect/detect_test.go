@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dmorris/content-extractor/extractor"
+	"github.com/damorris25/content-extractor/extractor"
 )
 
 func TestDetect_MagicBytes(t *testing.T) {

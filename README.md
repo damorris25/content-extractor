@@ -1,6 +1,8 @@
 # content-extractor
 
-> **rebar v1.2.0** | **Tier 2: ADOPTED**
+[![CI](https://github.com/damorris25/content-extractor/actions/workflows/ci.yml/badge.svg)](https://github.com/damorris25/content-extractor/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/damorris25/content-extractor.svg)](https://pkg.go.dev/github.com/damorris25/content-extractor)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A high-performance library for extracting textual content and metadata from
 unstructured file formats. Available in **Go** and **TypeScript** with proven
@@ -301,7 +303,7 @@ CGO_ENABLED=1 go test -tags ocr ./formats/image/
 ```
 
 ```go
-import "github.com/dmorris/content-extractor/formats/image"
+import "github.com/damorris25/content-extractor/formats/image"
 
 // Create extractor with OCR enabled
 engine, err := image.NewOCREngine("eng")
@@ -407,7 +409,7 @@ go test ./...
 ```
 
 ```go
-import "github.com/dmorris/content-extractor/contentextractor"
+import "github.com/damorris25/content-extractor/contentextractor"
 
 // Auto-detect format and extract (reader must implement io.ReadSeeker)
 result, err := contentextractor.Extract(ctx, reader, "")
@@ -468,7 +470,12 @@ content-extractor/
 
 ## Contributing
 
-See `AGENTS.md` for development norms, testing cascade, and collaboration
-patterns. All code must reference its architecture contract in the file header.
+See [CONTRIBUTING.md](CONTRIBUTING.md) to get started, and `AGENTS.md` for
+development norms, testing cascade, and collaboration patterns. All code must
+reference its architecture contract in the file header.
+
+## License
+
+[MIT](LICENSE) © 2026 Dana Morris
 
 ---

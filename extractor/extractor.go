@@ -5,7 +5,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/dmorris/content-extractor/metadata"
+	"github.com/damorris25/content-extractor/metadata"
 )
 
 // Extractor extracts text content and metadata from a specific file format.

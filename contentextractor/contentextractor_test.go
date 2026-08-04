@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dmorris/content-extractor/metadata"
+	"github.com/damorris25/content-extractor/metadata"
 )
 
 func TestIntegration_PlainText(t *testing.T) {

@@ -2,17 +2,14 @@
 
 ## Read Before Coding
 
-**The Cold Start Quad (every session, every agent, no exceptions):**
+**The Cold Start set (every session, every agent, no exceptions):**
 1. `README.md` — universal orientation (ALWAYS first)
-2. `QUICKCONTEXT.md` — current state (verify against `git log --oneline -10`)
-3. `TODO.md` — tasks + known issues + blockers
-4. `AGENTS.md` (this file) — norms, contracts, collaboration
+2. `TODO.md` — tasks + known issues + blockers
+3. `AGENTS.md` (this file) — norms, contracts, collaboration
 
 **Reference (read as needed):**
 - `DESIGN.md` — the philosophy (contracts are the operating system)
 - `architecture/CONTRACT-REGISTRY.md` — contract index
-- `practices/` — specialized guidance (orchestration, E2E, deployment, worktrees)
-- **ASK CLI** — query role-based agents: `ask architect "question"`, `ask product "question"`, `ask steward summary`. See `bin/ask help`.
 
 ## Core Tenets
 
@@ -69,13 +66,10 @@ Don't trust docs blindly. Cross-reference against actual state:
 git branch --show-current
 git log --oneline -10
 
-# 2. Compare QUICKCONTEXT.md branch claim against reality
-grep -i "branch" QUICKCONTEXT.md
-
-# 3. Check TODO.md "Last synced" date
+# 2. Check TODO.md "Last synced" date
 head -10 TODO.md
 
-# 4. Verify recent commits match documented priorities
+# 3. Verify recent commits match documented priorities
 git log --oneline -20 | head -10
 ```
 
@@ -86,7 +80,7 @@ git log --oneline -20 | head -10
 [ -x scripts/check-ground-truth.sh ] && ./scripts/check-ground-truth.sh
 ```
 
-If metrics have drifted, update `METRICS` BEFORE proceeding with your task.
+If metrics have drifted, update the affected docs BEFORE proceeding with your task.
 
 ### Step 2: Identify Discrepancies
 Look for these common drift patterns:
@@ -111,9 +105,6 @@ Before diving into code, ask:
 
 ## Multi-Agent Orchestration
 
-> For subagent templates, fan-out patterns, pre-launch audit, and feature
-> inventory protocol, see **`practices/multi-agent-orchestration.md`**.
->
 > **Key rules (always apply):** Subagents writing code MUST use worktree
 > isolation. Subagents MUST commit before completing. Run a pre-launch audit
 > before any parallel agent campaign.
@@ -263,13 +254,13 @@ Before adding ANY third-party dependency (Go or TypeScript):
 
 ### Single Source of Truth for Metrics
 
-| Metric | Computed From | Verified By | Referenced In |
-|--------|--------------|-------------|---------------|
-| Go test count | `go test -count=1 ./...` | `check-ground-truth.sh` | QUICKCONTEXT.md |
-| TS test count | `cd ts && npx vitest run` | manual | QUICKCONTEXT.md |
-| Contract count | `architecture/CONTRACT-*.md` | `check-ground-truth.sh` | CONTRACT-REGISTRY.md |
-| Format count | Registered extractors | `check-ground-truth.sh` | README.md |
-| Golden file count | `ls ts/__tests__/golden/ \| wc -l` | manual | QUICKCONTEXT.md |
+| Metric | Computed From | Verified By |
+|--------|--------------|-------------|
+| Go test count | `go test -count=1 ./...` | `check-ground-truth.sh` |
+| TS test count | `cd ts && npx vitest run` | manual |
+| Contract count | `architecture/CONTRACT-*.md` | `check-ground-truth.sh` |
+| Format count | Registered extractors | `check-ground-truth.sh` |
+| Golden file count | `ls ts/__tests__/golden/ \| wc -l` | manual |
 
 ---
 
@@ -329,4 +320,3 @@ Weekly, audit `TRACKED-TASK:` comments:
 2. Remove completed items from both code and docs
 3. Update stale references
 
-**See:** `CLAUDE.md` "TODO Tracking Methodology" for full details.

@@ -40,3 +40,11 @@ coverage.html
 node_modules/
 ts/dist/
 *.traineddata
+
+# Internal agent-workflow files (local only, not published)
+CLAUDE.md
+QUICKCONTEXT.md
+STEWARD_REPORT.md
+METRICS
+agents/
+practices/

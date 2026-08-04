@@ -17,7 +17,7 @@
 - [ ] Contract references point to existing files (`./scripts/check-contract-refs.sh`)
 - [ ] No untracked `TODO:` comments (`./scripts/check-todos.sh`)
 - [ ] Tests pass at T2+ (package-level or higher)
-- [ ] Docs updated if behavior changed (QUICKCONTEXT, TODO, relevant READMEs)
+- [ ] Docs updated if behavior changed (TODO.md, relevant READMEs)
 
 ## Test Plan
 

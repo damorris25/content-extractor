@@ -279,7 +279,7 @@ speed of code changes. Therefore:
 
 2. **Pre-Launch Audits** before fan-out campaigns. Grep for existing
    implementations before launching agents to build things that might already
-   exist. (See the 50% waste incident in docs/learnings-from-opendockit.md §7.)
+   exist.
 
 3. **Filesystem as source of truth.** When docs say one thing and `ls` +
    `grep` say another, the filesystem wins. Docs describe intent; the
@@ -653,19 +653,10 @@ goes from stable/strategic to volatile/tactical.
 
 ### Why lifecycle is computed, not declared
 
-We adopted lifecycle tracking from Purlin (see §11 Related Work), but with a
-key difference: status is derived from what exists in the codebase (do
+Lifecycle status is derived from what exists in the codebase (do
 implementing files exist? do test files exist? are all spec sections present?)
 rather than manually declared. Computed status can't drift — it's always
 accurate because it's always recomputed from reality.
-
-### Why agent commands are unquoted
-
-`ask steward "what needs attention?"` asks a question. `ask steward` runs a
-scan. The convention — quoted = question, unquoted = command — emerged from
-wanting each role to own a slice of project health without requiring the full
-persona invocation. Each agent has a `commands/` directory; drop a `.sh` file
-in it and it's immediately available. Zero changes to `bin/ask` needed.
 
 ### Why golden file parity for cross-language ports
 
@@ -714,44 +705,10 @@ agent development. Each idea built on the last:
 - Docs drifted → anti-drift mechanisms
 - Different projects → profiles
 - Quality gaps → Steward + enforcement scripts
-- Agent roles → ASK CLI with commands
-
-The [learnings document](docs/learnings-from-opendockit.md) captures the raw
-failure analysis and war stories from 5,800+ tests and 9 simultaneous agents.
 
 ---
 
-## 11. Related Work
-
-### Purlin
-
-[Purlin](https://github.com/purlin) is a spec-driven development framework
-that influenced several concepts in rebar.
-
-**Where we align:** specs before code, contract lifecycle, quality gates,
-companion docs, discovery taxonomy.
-
-**Where we diverge:**
-
-| Aspect | Purlin | rebar | Why |
-|--------|--------|-------|-----|
-| Role rigidity | Fixed hierarchy, formal handoffs | Fluid roles | Small teams wear multiple hats |
-| Scenarios | Gherkin-only, required | Gherkin optional | Infrastructure contracts don't benefit from Given/When/Then |
-| Code philosophy | "Code is disposable, specs are permanent" | Code and contracts are co-equal | Contracts become stale when not grounded in implementation |
-| Repo structure | Git submodules | Flat vendoring (proposed) | Submodules add complexity small teams can't absorb |
-| Dashboard | Required web UI | JSON-first, dashboard optional | `jq` should answer what a dashboard can |
-| Tooling | Purpose-built CLI | bash + jq + grep | Zero dependencies beyond a Unix shell |
-
-**What we adopted and adapted:**
-- Computed lifecycle status (derived from code, never declared)
-- Discovery taxonomy (BUG/DISCOVERY/DRIFT/DISPUTE)
-- Companion files (`.impl.md` for tribal knowledge)
-- Role-based action items (Steward routes findings to the right role)
-- Quality scanning as infrastructure (Steward = TPM in code form)
-
----
-
-## 12. Future Concepts
+## 11. Future Concepts
 
 Ideas we believe are directionally correct but haven't built yet.
 

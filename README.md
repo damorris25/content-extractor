@@ -358,16 +358,13 @@ No additional dependencies required — pure Go/TypeScript TIFF tag parsing.
 
 ## Agent Cold Start
 
-**Every agent session starts here.** Read these four files in order:
+**Every agent session starts here.** Read these files in order:
 
 1. **This file** (`README.md`) — project orientation (you're here)
-2. `QUICKCONTEXT.md` — what's true right now (branch, test counts, active work)
-3. `TODO.md` — what needs doing + known issues + blockers
-4. `AGENTS.md` — how we work (norms, testing cascade, contracts, collaboration)
+2. `TODO.md` — what needs doing + known issues + blockers
+3. `AGENTS.md` — how we work (norms, testing cascade, contracts, collaboration)
 
-Then: `CLAUDE.md` for Claude-specific configuration.
-
-**Trust but verify:** After reading QUICKCONTEXT.md, run `git log --oneline -10`
+**Trust but verify:** After reading the docs, run `git log --oneline -10`
 and compare. If docs and reality disagree, reality wins.
 
 ## Architecture
@@ -455,9 +452,7 @@ content-extractor/
 │   └── dist/           — built ESM + CJS bundles
 ├── testdata/           — shared test fixture files (Go + TS)
 ├── scripts/            — enforcement, quality scanning, golden file generation
-├── architecture/       — contract documents
-├── agents/             — subagent orchestration templates
-└── practices/          — reference guides
+└── architecture/       — contract documents
 ```
 
 ## Core Tenets
